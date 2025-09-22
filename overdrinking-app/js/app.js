@@ -15,6 +15,7 @@ class DrinkingApp {
         this.waterReminderTimer = null;
         this.firstDrinkTime = null;
         this.favoriteDrinks = []; // お気に入り飲み物のリスト
+        this.dailyMemo = ''; // その日の一言メモ
 
         // デフォルト飲み物データ
         this.drinkTypes = [
@@ -334,6 +335,41 @@ class DrinkingApp {
             this.saveSettings();
             this.restartWaterReminder();
         });
+
+        // 一言メモのイベント
+        const dailyMemoTextarea = document.getElementById('dailyMemo');
+        const memoCharCount = document.getElementById('memoCharCount');
+
+        dailyMemoTextarea.addEventListener('input', (e) => {
+            const text = e.target.value;
+            const length = text.length;
+
+            // 文字数制限 (200文字)
+            if (length > 200) {
+                e.target.value = text.substring(0, 200);
+                return;
+            }
+
+            // 文字数表示更新
+            memoCharCount.textContent = length;
+
+            // 色分け
+            const charCountElement = memoCharCount.parentElement;
+            charCountElement.classList.remove('warning', 'error');
+
+            if (length >= 180) {
+                charCountElement.classList.add('error');
+            } else if (length >= 150) {
+                charCountElement.classList.add('warning');
+            }
+
+            // メモを保存
+            this.dailyMemo = text;
+            this.saveData();
+        });
+
+        // 一言メモの初期表示
+        this.updateMemoDisplay();
     }
 
     addDrink(type, volume, alcoholPercent) {
@@ -894,6 +930,7 @@ class DrinkingApp {
                 ...toilet,
                 timestamp: toilet.timestamp.toISOString()
             })),
+            dailyMemo: this.dailyMemo,
             date: new Date().toDateString()
         };
         localStorage.setItem('drinkingApp_data', JSON.stringify(data));
@@ -924,6 +961,9 @@ class DrinkingApp {
                             ...toilet,
                             timestamp: new Date(toilet.timestamp)
                         }));
+                    }
+                    if (parsed.dailyMemo) {
+                        this.dailyMemo = parsed.dailyMemo;
                     }
                 }
             } catch (e) {
@@ -1192,6 +1232,27 @@ class DrinkingApp {
                 this.hideBottomSheet('customWaterForm');
             }
         }, { passive: true });
+    }
+
+    updateMemoDisplay() {
+        const dailyMemoTextarea = document.getElementById('dailyMemo');
+        const memoCharCount = document.getElementById('memoCharCount');
+
+        if (dailyMemoTextarea) {
+            dailyMemoTextarea.value = this.dailyMemo;
+            const length = this.dailyMemo.length;
+            memoCharCount.textContent = length;
+
+            // 文字数に応じた色分け
+            const charCountElement = memoCharCount.parentElement;
+            charCountElement.classList.remove('warning', 'error');
+
+            if (length >= 180) {
+                charCountElement.classList.add('error');
+            } else if (length >= 150) {
+                charCountElement.classList.add('warning');
+            }
+        }
     }
 }
 

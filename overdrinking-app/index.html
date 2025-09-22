@@ -18,7 +18,7 @@
                 <div class="app-title">
                     <span class="app-icon">🍺</span>
                     <span>Drink Smart</span>
-                    <span class="app-version">v1.4.0</span>
+                    <span class="app-version">v1.5.0</span>
                 </div>
             </div>
             <div class="header-right">
@@ -179,8 +179,21 @@
         <!-- 履歴タブ -->
         <section class="tab-content" id="history">
             <div class="history-container">
+                <!-- 一言メモセクション -->
+                <div class="memo-section">
+                    <div class="memo-header">
+                        <h3>📝 今日の一言</h3>
+                    </div>
+                    <div class="memo-input-container">
+                        <textarea id="dailyMemo" placeholder="飲み会の感想や反省点をメモ..."></textarea>
+                        <div class="memo-char-count">
+                            <span id="memoCharCount">0</span>/200文字
+                        </div>
+                    </div>
+                </div>
+
                 <div class="history-header">
-                    <h3>今日の記録</h3>
+                    <h3>🍻 飲酒記録</h3>
                     <button class="clear-btn" id="clearHistory">クリア</button>
                 </div>
                 <div class="history-list" id="drinkHistory">
