@@ -26,6 +26,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 ### Data Management
 - **Persistence**: All data stored in LocalStorage with automatic daily reset
 - **Data Structure**: Each drink record contains `{type, volume, alcoholPercent, pureAlcohol, timestamp}`
+- **Daily Memo**: Personal reflection notes stored with 200-character limit and real-time validation
 - **Settings**: Body weight, daily limits, pace targets, and reminder intervals
 
 ### Key Features
@@ -36,6 +37,8 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - **Smart Reminders**: Water intake reminders and pace warnings
 - **Favorites System**: Dynamic dashboard showing user's preferred drinks
 - **Last Drink Awareness**: Displays previous consumption time and elapsed duration for responsible pacing
+- **Daily Memo System**: Personal reflection notes with character limits and auto-save functionality
+- **Data Export**: Comprehensive export functionality supporting JSON, CSV, and human-readable text formats
 - **Mobile-First UI**: Smartphone app-like interface with bottom sheets and tab navigation
 
 ### UI Architecture
@@ -57,7 +60,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - Standard Git workflow: commit locally, then `git push` to deploy
 
 ### Version Management
-- Current version: 1.4.0 (displayed in app header)
+- Current version: 1.6.0 (displayed in app header)
 - Version locations to update on each release:
   - `overdrinking-app/manifest.json` - "version" field
   - `overdrinking-app/index.html` - `.app-version` span content
@@ -79,6 +82,11 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - `startLastDrinkUpdateTimer()` - 30-second interval timer for real-time elapsed time updates
 - `setupSwipeToClose()` - Touch gesture handling for mobile bottom sheet interactions
 - `hideAllBottomSheets()` - Universal modal closing function for emergency situations
+- `updateMemoDisplay()` - Initializes and updates daily memo display with character counting
+- `exportData(format)` - Main export orchestrator supporting multiple output formats
+- `generateJSONExport()` - Creates comprehensive JSON export with metadata and statistics
+- `generateCSVExport()` - Produces spreadsheet-compatible CSV with timeline data
+- `generateTextExport()` - Generates human-readable report with summary and detailed timeline
 
 ### Event Handling Patterns
 - **Event Delegation**: Use event delegation for dynamically generated elements
@@ -108,8 +116,10 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 
 ### Data Persistence Strategy
 - LocalStorage keys: `drinkingApp_data`, `drinkingApp_settings`, `drinkingApp_favorites`
+- Data includes: drinks, waterIntakes, toiletVisits, dailyMemo, and timestamp information
 - Automatic daily data reset based on date comparison
 - Error handling for corrupted localStorage data
+- Real-time saving for memo input with character limit validation
 
 ### PWA Configuration
 - Configured for standalone mobile app experience
@@ -235,6 +245,96 @@ getRecommendedWaterIntake() {
 - **Subtle Styling**: Uses `rgba(142, 142, 147, 0.1)` background to remain unobtrusive
 - **Information Architecture**: Time on left, elapsed duration on right for logical flow
 - **Color Coding**: Blue accent for elapsed time to draw attention to pacing information
+
+### Daily Memo System
+**Purpose**: Provides users with a space for personal reflection, notes about their drinking experience, and lessons learned.
+
+**Implementation**:
+```javascript
+// Real-time character counting with visual feedback
+dailyMemoTextarea.addEventListener('input', (e) => {
+    const text = e.target.value;
+    const length = text.length;
+
+    if (length > 200) {
+        e.target.value = text.substring(0, 200);
+        return;
+    }
+
+    // Visual feedback based on character count
+    if (length >= 180) charCountElement.classList.add('error');
+    else if (length >= 150) charCountElement.classList.add('warning');
+
+    this.dailyMemo = text;
+    this.saveData(); // Auto-save on every keystroke
+});
+```
+
+**Key Features**:
+- **200 Character Limit**: Encourages concise, meaningful reflection
+- **Real-time Validation**: Prevents exceeding character limit with immediate feedback
+- **Visual Indicators**: Warning at 150 chars (orange), error at 180+ chars (red)
+- **Auto-save**: Immediate persistence to localStorage on every keystroke
+- **Daily Reset**: Memo resets with daily data cycle
+- **Placeholder Guidance**: "飲み会の感想や反省点をメモ..." suggests appropriate content
+
+### Data Export System
+**Purpose**: Enables users to export their drinking data for personal analysis, medical consultations, or record keeping.
+
+**Supported Formats**:
+
+1. **JSON Export**: Complete technical data dump
+   ```json
+   {
+     "exportDate": "2025-09-22T...",
+     "appVersion": "1.5.0",
+     "dailyMemo": "楽しい飲み会でした...",
+     "summary": {
+       "totalAlcohol": 28,
+       "bloodAlcoholContent": 0.04,
+       "totalWater": 600,
+       "toiletVisits": 3,
+       "drinksCount": 2
+     },
+     "drinks": [/* detailed records */],
+     "waterIntakes": [/* timestamps and amounts */],
+     "toiletVisits": [/* timestamps */]
+   }
+   ```
+
+2. **CSV Export**: Spreadsheet-compatible timeline format
+   ```csv
+   日時,種別,内容,量,アルコール度数,純アルコール量
+   14:30,飲み物,ビール,500ml,5%,20g
+   14:45,水分,水分摂取,300ml,0%,0g
+   15:00,トイレ,トイレ訪問,-,-,-
+   -,メモ,"楽しい飲み会でした",-,-,-
+   ```
+
+3. **Text Export**: Human-readable report
+   ```
+   === Drink Smart レポート ===
+   日付: 2025年9月22日
+
+   --- 今日のサマリー ---
+   純アルコール量: 28g
+   血中アルコール濃度: 0.04%
+
+   --- 今日の一言 ---
+   楽しい飲み会でした...
+
+   --- 詳細記録 ---
+   1. 14:30 - ビール (500ml, 5%, 純アルコール20g)
+   2. 14:45 - 水分摂取 (300ml)
+   ```
+
+**Technical Implementation**:
+- **File Naming**: `DrinkSmart_YYYYMMDD.extension` format for easy organization
+- **UTF-8 Encoding**: Proper Japanese character support across all formats
+- **Blob API**: Client-side file generation without server dependencies
+- **MIME Types**: Correct content types for proper application association
+- **Memory Management**: Automatic URL.revokeObjectURL() after download
+- **User Feedback**: Vibration feedback on successful export
 
 ## Deployment and Distribution
 

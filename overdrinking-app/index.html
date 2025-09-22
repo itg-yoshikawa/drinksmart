@@ -18,7 +18,7 @@
                 <div class="app-title">
                     <span class="app-icon">🍺</span>
                     <span>Drink Smart</span>
-                    <span class="app-version">v1.5.0</span>
+                    <span class="app-version">v1.6.0</span>
                 </div>
             </div>
             <div class="header-right">
@@ -194,7 +194,10 @@
 
                 <div class="history-header">
                     <h3>🍻 飲酒記録</h3>
-                    <button class="clear-btn" id="clearHistory">クリア</button>
+                    <div class="history-actions">
+                        <button class="export-btn" id="exportHistory">📤 エクスポート</button>
+                        <button class="clear-btn" id="clearHistory">クリア</button>
+                    </div>
                 </div>
                 <div class="history-list" id="drinkHistory">
                     <div class="empty-state">
@@ -281,6 +284,39 @@
                     </label>
                     <small>対応端末でボタンタップ時に振動します</small>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- エクスポートボトムシート -->
+    <div class="bottom-sheet" id="exportSheet">
+        <div class="bottom-sheet-header">
+            <h3>エクスポート形式</h3>
+            <button class="close-btn" id="closeExport">×</button>
+        </div>
+        <div class="bottom-sheet-content">
+            <div class="export-options">
+                <button class="export-option-btn" id="exportJSON">
+                    <div class="export-option-icon">📄</div>
+                    <div class="export-option-content">
+                        <div class="export-option-title">JSON形式</div>
+                        <div class="export-option-desc">詳細データ（開発者向け）</div>
+                    </div>
+                </button>
+                <button class="export-option-btn" id="exportCSV">
+                    <div class="export-option-icon">📊</div>
+                    <div class="export-option-content">
+                        <div class="export-option-title">CSV形式</div>
+                        <div class="export-option-desc">表計算ソフトで利用可能</div>
+                    </div>
+                </button>
+                <button class="export-option-btn" id="exportText">
+                    <div class="export-option-icon">📝</div>
+                    <div class="export-option-content">
+                        <div class="export-option-title">テキスト形式</div>
+                        <div class="export-option-desc">読みやすいレポート形式</div>
+                    </div>
+                </button>
             </div>
         </div>
     </div>

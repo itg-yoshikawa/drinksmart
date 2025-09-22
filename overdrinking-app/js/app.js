@@ -370,6 +370,30 @@ class DrinkingApp {
 
         // 一言メモの初期表示
         this.updateMemoDisplay();
+
+        // エクスポート関連のイベント
+        document.getElementById('exportHistory').addEventListener('click', () => {
+            this.showBottomSheet('exportSheet');
+        });
+
+        document.getElementById('closeExport').addEventListener('click', () => {
+            this.hideBottomSheet('exportSheet');
+        });
+
+        document.getElementById('exportJSON').addEventListener('click', () => {
+            this.exportData('json');
+            this.hideBottomSheet('exportSheet');
+        });
+
+        document.getElementById('exportCSV').addEventListener('click', () => {
+            this.exportData('csv');
+            this.hideBottomSheet('exportSheet');
+        });
+
+        document.getElementById('exportText').addEventListener('click', () => {
+            this.exportData('text');
+            this.hideBottomSheet('exportSheet');
+        });
     }
 
     addDrink(type, volume, alcoholPercent) {
@@ -1253,6 +1277,201 @@ class DrinkingApp {
                 charCountElement.classList.add('warning');
             }
         }
+    }
+
+    exportData(format) {
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('ja-JP');
+        const fileName = `DrinkSmart_${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+
+        let content = '';
+        let mimeType = '';
+        let extension = '';
+
+        switch (format) {
+            case 'json':
+                content = this.generateJSONExport();
+                mimeType = 'application/json';
+                extension = 'json';
+                break;
+            case 'csv':
+                content = this.generateCSVExport();
+                mimeType = 'text/csv';
+                extension = 'csv';
+                break;
+            case 'text':
+                content = this.generateTextExport();
+                mimeType = 'text/plain';
+                extension = 'txt';
+                break;
+            default:
+                return;
+        }
+
+        // ファイルダウンロード
+        const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}.${extension}`;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        // 振動フィードバック
+        this.vibrate([100]);
+    }
+
+    generateJSONExport() {
+        const exportData = {
+            exportDate: new Date().toISOString(),
+            appVersion: '1.6.0',
+            date: new Date().toDateString(),
+            dailyMemo: this.dailyMemo,
+            summary: {
+                totalAlcohol: this.getTotalAlcohol(),
+                bloodAlcoholContent: this.calculateBloodAlcoholContent(),
+                totalWater: this.getTotalWater(),
+                toiletVisits: this.toiletVisits.length,
+                drinksCount: this.drinks.length
+            },
+            drinks: this.drinks.map(drink => ({
+                ...drink,
+                timestamp: drink.timestamp.toISOString(),
+                drinkName: this.getDrinkName(drink.type)
+            })),
+            waterIntakes: this.waterIntakes.map(water => ({
+                ...water,
+                timestamp: water.timestamp.toISOString()
+            })),
+            toiletVisits: this.toiletVisits.map(toilet => ({
+                ...toilet,
+                timestamp: toilet.timestamp.toISOString()
+            }))
+        };
+        return JSON.stringify(exportData, null, 2);
+    }
+
+    generateCSVExport() {
+        const lines = ['日時,種別,内容,量,アルコール度数,純アルコール量'];
+
+        // 飲み物記録
+        this.drinks.forEach(drink => {
+            const time = drink.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const name = this.getDrinkName(drink.type);
+            lines.push(`${time},飲み物,${name},${drink.volume}ml,${drink.alcoholPercent}%,${drink.pureAlcohol}g`);
+        });
+
+        // 水分摂取記録
+        this.waterIntakes.forEach(water => {
+            const time = water.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            lines.push(`${time},水分,水分摂取,${water.amount}ml,0%,0g`);
+        });
+
+        // トイレ記録
+        this.toiletVisits.forEach(toilet => {
+            const time = toilet.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            lines.push(`${time},トイレ,トイレ訪問,-,-,-`);
+        });
+
+        // 一言メモ
+        if (this.dailyMemo.trim()) {
+            lines.push(`-,メモ,"${this.dailyMemo.replace(/"/g, '""')}",-,-,-`);
+        }
+
+        return lines.join('\n');
+    }
+
+    generateTextExport() {
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        let report = `=== Drink Smart レポート ===\n`;
+        report += `日付: ${dateStr}\n`;
+        report += `エクスポート日時: ${today.toLocaleString('ja-JP')}\n\n`;
+
+        // サマリー
+        report += `--- 今日のサマリー ---\n`;
+        report += `純アルコール量: ${this.getTotalAlcohol()}g\n`;
+        report += `血中アルコール濃度: ${this.calculateBloodAlcoholContent().toFixed(2)}%\n`;
+        report += `水分摂取量: ${this.getTotalWater()}ml\n`;
+        report += `トイレ回数: ${this.toiletVisits.length}回\n`;
+        report += `飲み物記録数: ${this.drinks.length}杯\n\n`;
+
+        // 一言メモ
+        if (this.dailyMemo.trim()) {
+            report += `--- 今日の一言 ---\n`;
+            report += `${this.dailyMemo}\n\n`;
+        }
+
+        // 詳細記録
+        report += `--- 詳細記録 ---\n`;
+
+        // すべての記録を時系列順に統合
+        const allRecords = [
+            ...this.drinks.map(drink => ({
+                ...drink,
+                type: 'drink',
+                displayName: this.getDrinkName(drink.originalType || drink.type)
+            })),
+            ...this.waterIntakes.map(water => ({
+                ...water,
+                type: 'water',
+                displayName: '水分摂取'
+            })),
+            ...this.toiletVisits.map(toilet => ({
+                ...toilet,
+                type: 'toilet',
+                displayName: 'トイレ'
+            }))
+        ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        allRecords.forEach((record, index) => {
+            const time = record.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            switch (record.type) {
+                case 'drink':
+                    report += `${index + 1}. ${time} - ${record.displayName} (${record.volume}ml, ${record.alcoholPercent}%, 純アルコール${record.pureAlcohol}g)\n`;
+                    break;
+                case 'water':
+                    report += `${index + 1}. ${time} - ${record.displayName} (${record.amount}ml)\n`;
+                    break;
+                case 'toilet':
+                    report += `${index + 1}. ${time} - ${record.displayName}\n`;
+                    break;
+            }
+        });
+
+        if (allRecords.length === 0) {
+            report += `記録はありません。\n`;
+        }
+
+        report += `\n--- レポート終了 ---\n`;
+        report += `Generated by Drink Smart v1.6.0\n`;
+
+        return report;
+    }
+
+    getDrinkName(type) {
+        const drinkType = this.drinkTypes.find(d => d.type === type);
+        return drinkType ? drinkType.name : type;
     }
 }
 
