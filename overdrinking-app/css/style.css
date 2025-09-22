@@ -392,6 +392,21 @@ body {
     color: #8e8e93;
 }
 
+.info-target {
+    font-size: 11px;
+    color: #007AFF;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.info-target.sufficient {
+    color: #27ae60;
+}
+
+.info-target.insufficient {
+    color: #e74c3c;
+}
+
 /* よく使う飲み物 */
 .popular-drinks {
     margin-bottom: 24px;

@@ -451,6 +451,28 @@ class DrinkingApp {
         return this.waterIntakes.reduce((total, intake) => total + intake.amount, 0);
     }
 
+    getRecommendedWaterIntake() {
+        const totalAlcohol = this.getTotalAlcohol();
+
+        // 基本的な水分補給ガイドライン：
+        // 1. アルコール1gにつき10-15mlの水分摂取を推奨
+        // 2. 最低でもアルコール飲料と同量の水分
+        // 3. 脱水防止のための追加水分
+
+        if (totalAlcohol === 0) return 0;
+
+        // アルコール量ベースの推奨量（12ml/g）
+        const alcoholBasedWater = totalAlcohol * 12;
+
+        // 飲料量ベースの推奨量（アルコール飲料総量と同量）
+        const totalDrinkVolume = this.drinks.reduce((total, drink) => total + drink.volume, 0);
+
+        // より高い方を採用し、最低300ml以上を確保
+        const recommended = Math.max(alcoholBasedWater, totalDrinkVolume, 300);
+
+        return Math.round(recommended);
+    }
+
     getWaterAlcoholRatio() {
         const totalWater = this.getTotalWater();
         const totalAlcohol = this.getTotalAlcohol();
@@ -513,6 +535,26 @@ class DrinkingApp {
         document.getElementById('toiletCount').textContent = `${toiletCount}回`;
         document.getElementById('currentPace').textContent = currentPace;
         document.getElementById('soberTime').textContent = soberTime;
+
+        // 推奨水分量の表示と評価
+        const recommendedWater = this.getRecommendedWaterIntake();
+        const waterTarget = document.getElementById('waterTarget');
+
+        if (recommendedWater === 0) {
+            waterTarget.textContent = '推奨: 飲酒開始で表示';
+            waterTarget.className = 'info-target';
+        } else {
+            waterTarget.textContent = `推奨: ${recommendedWater}ml`;
+
+            // 摂取状況による色分け
+            if (totalWater >= recommendedWater) {
+                waterTarget.className = 'info-target sufficient';
+            } else if (totalWater >= recommendedWater * 0.7) {
+                waterTarget.className = 'info-target';
+            } else {
+                waterTarget.className = 'info-target insufficient';
+            }
+        }
 
         // 血中アルコール濃度の状態表示更新
         const bacStatus = this.getBacStatus(bac);

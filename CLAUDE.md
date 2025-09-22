@@ -31,6 +31,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 ### Key Features
 - **Blood Alcohol Calculation**: Real-time BAC calculation using Widmark formula with medical accuracy
 - **BAC Status Display**: Visual alcohol impairment level indicators with medical terminology
+- **Hydration Guidance**: Dynamic water intake recommendations based on alcohol consumption
 - **Pace Tracking**: Monitors drinking speed (minutes per drink) with warnings
 - **Smart Reminders**: Water intake reminders and pace warnings
 - **Favorites System**: Dynamic dashboard showing user's preferred drinks
@@ -68,6 +69,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - `addDrink(type, volume, alcohol)` - Core consumption tracking
 - `calculateBloodAlcoholContent()` - BAC calculation using Widmark formula with time-based metabolism
 - `getBacStatus(bac)` - Maps BAC percentage to medical impairment levels
+- `getRecommendedWaterIntake()` - Calculates optimal hydration based on alcohol consumption
 - `generateDrinkCards()` - Dynamic UI generation for drink selection
 - `toggleFavorite(drinkType)` - Favorites management with persistence
 - `updateFavoriteDrinksDisplay()` - Dashboard favorite drinks sync
@@ -162,6 +164,34 @@ const initialBAC = (totalAlcohol * 0.8) / (this.bodyWeight * bodyFactor) / 10;
 **Validation Example**:
 - Beer 500ml (20g alcohol), 77kg male → 0.03% BAC (爽快期)
 - This should result in "爽快期" (euphoric stage), not higher levels
+
+### Hydration Recommendation System
+**Water Intake Calculation**: The app provides dynamic hydration guidance to prevent dehydration and reduce hangover risk:
+
+```javascript
+// Multi-factor approach for optimal hydration
+getRecommendedWaterIntake() {
+    const alcoholBasedWater = totalAlcohol * 12; // 12ml per gram of alcohol
+    const volumeBasedWater = totalDrinkVolume;   // Match alcohol drink volume
+    const minimumWater = 300;                    // Baseline hydration
+    return Math.max(alcoholBasedWater, volumeBasedWater, minimumWater);
+}
+```
+
+**Implementation Guidelines**:
+- **Alcohol-Based Formula**: 12ml of water per gram of pure alcohol (evidence-based ratio)
+- **Volume Matching**: Minimum water intake should equal total alcoholic beverage volume
+- **Baseline Requirement**: Always recommend at least 300ml regardless of alcohol consumption
+- **Visual Feedback**: Color-coded status (red: <70% target, blue: 70-99%, green: ≥100%)
+
+**Hydration Status Logic**:
+- **Insufficient** (Red): Less than 70% of recommended intake
+- **Adequate** (Blue): 70-99% of recommended intake
+- **Sufficient** (Green): 100% or more of recommended intake
+
+**Real-world Example**:
+- Beer 500ml (20g alcohol) → Recommended: 500ml water (max of 240ml, 500ml, 300ml)
+- User drinks 600ml water → Status: "Sufficient" (green, 120% of target)
 
 ## Deployment and Distribution
 
