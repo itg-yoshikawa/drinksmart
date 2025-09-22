@@ -1,0 +1,1094 @@
+/* リセットCSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #f5f5f7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
+}
+
+/* アプリヘッダー */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e5e7;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: env(safe-area-inset-top) 0 0 0;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    height: 56px;
+}
+
+.app-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.app-icon {
+    font-size: 20px;
+}
+
+.header-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    border: none;
+    background: #f2f2f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.header-btn:hover {
+    background: #e5e5ea;
+    transform: scale(1.05);
+}
+
+.header-btn:active {
+    transform: scale(0.95);
+}
+
+.date-badge {
+    background: #007AFF;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0 20px 8px 20px;
+    text-align: center;
+}
+
+/* メインコンテンツ */
+.app-main {
+    padding-top: calc(env(safe-area-inset-top) + 90px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+    min-height: 100vh;
+}
+
+/* タブナビゲーション */
+.tab-nav {
+    display: flex;
+    background: #ffffff;
+    border-radius: 16px;
+    margin: 0 16px 20px 16px;
+    padding: 4px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+}
+
+.tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tab-btn.active {
+    background: #007AFF;
+    color: white;
+    transform: scale(1.02);
+}
+
+.tab-btn.active .tab-icon {
+    transform: scale(1.1);
+}
+
+.tab-icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.tab-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* タブコンテンツ */
+.tab-content {
+    display: none;
+    padding: 0 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ステータス概要 */
+.status-overview {
+    margin-bottom: 24px;
+}
+
+.primary-stats {
+    margin-bottom: 16px;
+}
+
+.main-stat {
+    background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3);
+}
+
+.stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 16px;
+}
+
+.stat-progress {
+    margin-top: 16px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+.secondary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.stat-card {
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-card .stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.stat-card .stat-label {
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+/* 情報グリッド */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+}
+
+.info-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    background: #f2f2f7;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-content {
+    flex: 1;
+}
+
+.info-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+/* よく使う飲み物 */
+.popular-drinks {
+    margin-bottom: 24px;
+}
+
+.popular-drinks h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+}
+
+.popular-drinks-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.drink-quick-btn {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.drink-quick-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+.drink-quick-btn:active {
+    transform: scale(0.96);
+}
+
+.drink-quick-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(88, 86, 214, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.drink-quick-btn:hover::before {
+    opacity: 1;
+}
+
+.drink-quick-icon {
+    font-size: 32px;
+    margin-bottom: 4px;
+    transition: transform 0.3s ease;
+}
+
+.drink-quick-btn:hover .drink-quick-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.drink-quick-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.drink-quick-detail {
+    font-size: 11px;
+    color: #8e8e93;
+    text-align: center;
+}
+
+/* クイックアクション */
+.quick-actions {
+    margin-bottom: 24px;
+}
+
+.quick-actions h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+}
+
+.action-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.quick-action-btn {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.quick-action-btn:active {
+    transform: scale(0.98);
+}
+
+.action-icon {
+    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    background: #f2f2f7;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.water-action .action-icon {
+    background: linear-gradient(135deg, #007AFF, #5AC8FA);
+    color: white;
+}
+
+.toilet-action .action-icon {
+    background: linear-gradient(135deg, #FF9500, #FFCC02);
+    color: white;
+}
+
+.custom-water-action .action-icon {
+    background: linear-gradient(135deg, #5856D6, #AF52DE);
+    color: white;
+}
+
+.action-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.action-detail {
+    font-size: 10px;
+    color: #8e8e93;
+}
+
+/* 警告カード */
+.warning-card {
+    background: linear-gradient(135deg, #FF3B30, #FF9500);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 24px rgba(255, 59, 48, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.warning-icon {
+    font-size: 24px;
+}
+
+.warning-text {
+    font-weight: 500;
+}
+
+/* 飲み物タブ */
+.drinks-container {
+    padding-bottom: 20px;
+}
+
+.drinks-container h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+}
+
+.drink-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.drink-card {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.drink-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+.drink-card:active {
+    transform: scale(0.98);
+}
+
+.drink-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(88, 86, 214, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.drink-card:hover::before {
+    opacity: 1;
+}
+
+.drink-emoji {
+    font-size: 32px;
+    margin-bottom: 4px;
+    transition: transform 0.3s ease;
+}
+
+.drink-card:hover .drink-emoji {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.drink-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.drink-info {
+    font-size: 10px;
+    color: #8e8e93;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+/* 飲み物カードのアクション */
+.drink-actions {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.favorite-btn {
+    background: none;
+    border: 1px solid #E5E5EA;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.1);
+    border-color: #FFD700;
+}
+
+.favorite-btn.active {
+    background: #FFD700;
+    border-color: #FFD700;
+    color: white;
+}
+
+.add-drink-btn {
+    background: linear-gradient(135deg, #007AFF, #5856D6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.add-drink-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+}
+
+.add-drink-btn:active {
+    transform: translateY(0);
+}
+
+/* お気に入りなしの状態 */
+.no-favorites {
+    text-align: center;
+    padding: 20px;
+    color: #8e8e93;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    grid-column: 1 / -1;
+}
+
+.no-favorites p {
+    margin: 4px 0;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.no-favorites p:first-child {
+    font-weight: 600;
+    color: #1d1d1f;
+}
+
+.custom-drink {
+    border: 2px dashed #c7c7cc;
+    background: #f8f9fa;
+}
+
+.custom-drink:hover {
+    border-color: #007AFF;
+    background: white;
+}
+
+/* 履歴タブ */
+.history-container {
+    padding-bottom: 20px;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.history-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.clear-btn {
+    background: #FF3B30;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+    background: #FF2D20;
+    transform: scale(1.05);
+}
+
+.clear-btn:active {
+    transform: scale(0.95);
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8e8e93;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-text {
+    font-size: 16px;
+}
+
+/* 履歴アイテム */
+.drink-item {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #007AFF;
+    animation: slideInRight 0.3s ease;
+}
+
+.water-item {
+    border-left-color: #5AC8FA;
+}
+
+.toilet-item {
+    border-left-color: #FF9500;
+}
+
+.drink-info {
+    flex: 1;
+}
+
+.drink-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.drink-details {
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+.drink-alcohol {
+    font-size: 16px;
+    font-weight: 600;
+    color: #007AFF;
+}
+
+.water-item .drink-alcohol {
+    color: #5AC8FA;
+}
+
+.toilet-item .drink-alcohol {
+    color: #FF9500;
+}
+
+/* ボトムシート */
+.bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 0;
+    z-index: 2000;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    max-height: 70vh;
+    overflow: hidden;
+}
+
+.bottom-sheet.active {
+    transform: translateY(0);
+}
+
+.bottom-sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 16px 24px;
+    border-bottom: 1px solid #e5e5e7;
+    position: relative;
+}
+
+.bottom-sheet-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background: #c7c7cc;
+    border-radius: 2px;
+}
+
+.bottom-sheet-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    border: none;
+    background: #f2f2f7;
+    color: #8e8e93;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #e5e5ea;
+    color: #1a1a1a;
+}
+
+.bottom-sheet-content {
+    padding: 24px;
+    overflow-y: auto;
+    max-height: calc(70vh - 80px);
+}
+
+/* 入力グループ */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e5e5e7;
+    border-radius: 12px;
+    font-size: 16px;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #007AFF;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.input-group small {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+/* プライマリボタン */
+.primary-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #007AFF, #5856D6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3);
+}
+
+.primary-btn:active {
+    transform: scale(0.98);
+}
+
+.primary-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.primary-btn:hover::before {
+    left: 100%;
+}
+
+/* オーバーレイ */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1500;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(100px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* レスポンシブ */
+@media (max-width: 480px) {
+    .tab-nav {
+        margin: 0 12px 16px 12px;
+    }
+
+    .tab-content {
+        padding: 0 12px;
+    }
+
+    .secondary-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .action-buttons-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .popular-drinks-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .drink-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .header-content {
+        padding: 8px 16px;
+    }
+
+    .app-title {
+        font-size: 16px;
+    }
+
+    .secondary-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .popular-drinks-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #000000;
+        color: #ffffff;
+    }
+
+    .app-header {
+        background: #1c1c1e;
+        border-bottom-color: #38383a;
+    }
+
+    .app-title {
+        color: #ffffff;
+    }
+
+    .header-btn {
+        background: #2c2c2e;
+    }
+
+    .header-btn:hover {
+        background: #3a3a3c;
+    }
+
+    .tab-nav,
+    .stat-card,
+    .info-card,
+    .quick-action-btn,
+    .drink-card,
+    .drink-quick-btn,
+    .drink-item,
+    .bottom-sheet {
+        background: #1c1c1e;
+    }
+
+    .stat-card .stat-value,
+    .drink-name,
+    .drink-quick-name,
+    .info-value {
+        color: #ffffff;
+    }
+
+    .input-group input {
+        background: #2c2c2e;
+        border-color: #3a3a3c;
+        color: #ffffff;
+    }
+
+    .action-icon {
+        background: #2c2c2e;
+    }
+}
+
+/* PWA最適化 */
+@media (display-mode: standalone) {
+    .app-header {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    .app-main {
+        padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+    }
+}
+
+/* タッチ操作最適化 */
+@media (hover: none) and (pointer: coarse) {
+    .tab-btn:hover,
+    .stat-card:hover,
+    .info-card:hover,
+    .quick-action-btn:hover,
+    .drink-card:hover,
+    .drink-quick-btn:hover {
+        transform: none;
+    }
+
+    .tab-btn:active,
+    .quick-action-btn:active,
+    .drink-card:active,
+    .drink-quick-btn:active {
+        transform: scale(0.96);
+    }
+}

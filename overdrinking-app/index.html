@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Drink Smart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+<body>
+    <!-- スマホアプリ風ヘッダー -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="app-title">
+                    <span class="app-icon">🍺</span>
+                    <span>Drink Smart</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn" id="settingsBtn">
+                    <span class="icon">⚙️</span>
+                </button>
+            </div>
+        </div>
+        <div class="date-badge" id="currentDate">2025年9月22日</div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="app-main">
+        <!-- タブナビゲーション -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="dashboard">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">ダッシュボード</span>
+            </button>
+            <button class="tab-btn" data-tab="drinks">
+                <span class="tab-icon">🍻</span>
+                <span class="tab-label">飲み物</span>
+            </button>
+            <button class="tab-btn" data-tab="history">
+                <span class="tab-icon">📝</span>
+                <span class="tab-label">履歴</span>
+            </button>
+        </nav>
+
+        <!-- ダッシュボードタブ -->
+        <section class="tab-content active" id="dashboard">
+            <!-- ステータスカード -->
+            <div class="status-overview">
+                <div class="primary-stats">
+                    <div class="stat-card main-stat">
+                        <div class="stat-value" id="totalAlcohol">0g</div>
+                        <div class="stat-label">純アルコール量</div>
+                        <div class="stat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="secondary-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="bloodAlcohol">0.00%</div>
+                        <div class="stat-label">血中濃度</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="soberTime">0時間</div>
+                        <div class="stat-label">しらふまで</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="remainingLimit">20g</div>
+                        <div class="stat-label">適正量まで</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 水分・ペース情報 -->
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-icon">💧</div>
+                    <div class="info-content">
+                        <div class="info-value" id="totalWater">0ml</div>
+                        <div class="info-label">水分摂取量</div>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">⏱️</div>
+                    <div class="info-content">
+                        <div class="info-value" id="currentPace">-</div>
+                        <div class="info-label">現在のペース</div>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🚽</div>
+                    <div class="info-content">
+                        <div class="info-value" id="toiletCount">0回</div>
+                        <div class="info-label">トイレ回数</div>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">📊</div>
+                    <div class="info-content">
+                        <div class="info-value" id="waterAlcoholRatio">-</div>
+                        <div class="info-label">水分比率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- よく使う飲み物 -->
+            <div class="popular-drinks">
+                <h3>よく使う飲み物</h3>
+                <div class="popular-drinks-grid">
+                    <button class="drink-quick-btn" data-type="beer" data-alcohol="5" data-volume="350">
+                        <div class="drink-quick-icon">🍺</div>
+                        <div class="drink-quick-name">ビール</div>
+                        <div class="drink-quick-detail">350ml</div>
+                    </button>
+                    <button class="drink-quick-btn" data-type="highball" data-alcohol="7" data-volume="300">
+                        <div class="drink-quick-icon">🥃</div>
+                        <div class="drink-quick-name">ハイボール</div>
+                        <div class="drink-quick-detail">300ml</div>
+                    </button>
+                    <button class="drink-quick-btn" data-type="sake" data-alcohol="15" data-volume="180">
+                        <div class="drink-quick-icon">🍶</div>
+                        <div class="drink-quick-name">日本酒</div>
+                        <div class="drink-quick-detail">1合</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- クイックアクション -->
+            <div class="quick-actions">
+                <h3>クイックアクション</h3>
+                <div class="action-buttons-grid">
+                    <button class="quick-action-btn water-action" id="addWater">
+                        <div class="action-icon">💧</div>
+                        <div class="action-label">水分摂取</div>
+                        <div class="action-detail">200ml</div>
+                    </button>
+                    <button class="quick-action-btn toilet-action" id="addToilet">
+                        <div class="action-icon">🚽</div>
+                        <div class="action-label">トイレ</div>
+                        <div class="action-detail">記録</div>
+                    </button>
+                    <button class="quick-action-btn custom-water-action" id="customWater">
+                        <div class="action-icon">💧</div>
+                        <div class="action-label">カスタム水分</div>
+                        <div class="action-detail">任意の量</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 警告メッセージ -->
+            <div class="warning-card" id="warningMessage" style="display: none;">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-text">適正飲酒量を超えています！</div>
+            </div>
+        </section>
+
+        <!-- 飲み物タブ -->
+        <section class="tab-content" id="drinks">
+            <div class="drinks-container">
+                <h3>飲み物を選択</h3>
+                <div class="drink-grid" id="drinkGrid">
+                    <!-- 動的に生成される -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 履歴タブ -->
+        <section class="tab-content" id="history">
+            <div class="history-container">
+                <div class="history-header">
+                    <h3>今日の記録</h3>
+                    <button class="clear-btn" id="clearHistory">クリア</button>
+                </div>
+                <div class="history-list" id="drinkHistory">
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <div class="empty-text">まだ記録がありません</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- カスタム入力ボトムシート -->
+    <div class="bottom-sheet" id="customForm">
+        <div class="bottom-sheet-header">
+            <h3>カスタム飲み物</h3>
+            <button class="close-btn" id="cancelCustom">×</button>
+        </div>
+        <div class="bottom-sheet-content">
+            <div class="input-group">
+                <label>量 (ml)</label>
+                <input type="number" id="customVolume" placeholder="350">
+            </div>
+            <div class="input-group">
+                <label>アルコール度数 (%)</label>
+                <input type="number" id="customAlcohol" placeholder="5.0" step="0.1">
+            </div>
+            <button class="primary-btn" id="addCustomDrink">追加</button>
+        </div>
+    </div>
+
+    <!-- カスタム水分入力ボトムシート -->
+    <div class="bottom-sheet" id="customWaterForm">
+        <div class="bottom-sheet-header">
+            <h3>カスタム水分摂取</h3>
+            <button class="close-btn" id="cancelCustomWater">×</button>
+        </div>
+        <div class="bottom-sheet-content">
+            <div class="input-group">
+                <label>水分量 (ml)</label>
+                <input type="number" id="customWaterAmount" placeholder="500">
+            </div>
+            <button class="primary-btn" id="addCustomWater">追加</button>
+        </div>
+    </div>
+
+    <!-- 設定ボトムシート -->
+    <div class="bottom-sheet settings-sheet" id="settingsSheet">
+        <div class="bottom-sheet-header">
+            <h3>設定</h3>
+            <button class="close-btn" id="closeSettings">×</button>
+        </div>
+        <div class="bottom-sheet-content">
+            <div class="setting-section">
+                <div class="input-group">
+                    <label>体重 (kg)</label>
+                    <input type="number" id="bodyWeight" value="77">
+                </div>
+                <div class="input-group">
+                    <label>1日の適正飲酒量 (g)</label>
+                    <input type="number" id="dailyLimit" value="20">
+                    <small>厚生労働省推奨：男性20g、女性10g</small>
+                </div>
+                <div class="input-group">
+                    <label>目標ペース (分/杯)</label>
+                    <input type="number" id="targetPace" value="30">
+                    <small>推奨：20-30分に1杯のペース</small>
+                </div>
+                <div class="input-group">
+                    <label>水分補給リマインド (分)</label>
+                    <input type="number" id="waterReminder" value="20">
+                    <small>指定した間隔で水分補給をお知らせ</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- オーバーレイ -->
+    <div class="overlay" id="overlay"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
