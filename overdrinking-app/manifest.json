@@ -2,7 +2,7 @@
     "name": "Drink Smart",
     "short_name": "Drink Smart",
     "description": "飲み会でのアルコール摂取量を管理して、適正飲酒をサポートするアプリ",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "start_url": "index.html",
     "display": "standalone",
     "orientation": "portrait",
