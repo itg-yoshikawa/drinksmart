@@ -21,6 +21,7 @@ class DrinkingApp {
             { type: 'beer', name: 'ビール', emoji: '🍺', volume: 350, alcohol: 5, info: '350ml (5%)' },
             { type: 'beer_large', name: 'ビール大', emoji: '🍺', volume: 500, alcohol: 5, info: '500ml (5%)' },
             { type: 'highball', name: 'ハイボール', emoji: '🥃', volume: 300, alcohol: 7, info: '300ml (7%)' },
+            { type: 'highball_large', name: 'ハイボール大', emoji: '🥃', volume: 500, alcohol: 7, info: '500ml (7%)' },
             { type: 'sake', name: '日本酒', emoji: '🍶', volume: 180, alcohol: 15, info: '1合 (15%)' },
             { type: 'wine', name: 'ワイン', emoji: '🍷', volume: 120, alcohol: 12, info: '120ml (12%)' },
             { type: 'sparkling_wine', name: 'スパークリング', emoji: '🥂', volume: 120, alcohol: 12, info: '120ml (12%)' },
@@ -208,7 +209,12 @@ class DrinkingApp {
             this.addCustomDrink();
         });
 
-        document.getElementById('cancelCustom').addEventListener('click', () => {
+        const cancelCustomBtn = document.getElementById('cancelCustom');
+        cancelCustomBtn.addEventListener('click', () => {
+            this.hideBottomSheet('customForm');
+        });
+        cancelCustomBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
             this.hideBottomSheet('customForm');
         });
 
@@ -271,7 +277,12 @@ class DrinkingApp {
             this.addCustomWater();
         });
 
-        document.getElementById('cancelCustomWater').addEventListener('click', () => {
+        const cancelCustomWaterBtn = document.getElementById('cancelCustomWater');
+        cancelCustomWaterBtn.addEventListener('click', () => {
+            this.hideBottomSheet('customWaterForm');
+        });
+        cancelCustomWaterBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
             this.hideBottomSheet('customWaterForm');
         });
 
@@ -286,8 +297,13 @@ class DrinkingApp {
             }
         });
 
-        // 設定ボトムシートのイベント
-        document.getElementById('closeSettings').addEventListener('click', () => {
+        // 設定ボトムシートのイベント - クリックとタッチの両方をサポート
+        const closeSettingsBtn = document.getElementById('closeSettings');
+        closeSettingsBtn.addEventListener('click', () => {
+            this.hideBottomSheet('settingsSheet');
+        });
+        closeSettingsBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
             this.hideBottomSheet('settingsSheet');
         });
 
@@ -295,6 +311,16 @@ class DrinkingApp {
         document.getElementById('overlay').addEventListener('click', () => {
             this.hideAllBottomSheets();
         });
+
+        // ESCキーで設定画面を閉じる
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.hideAllBottomSheets();
+            }
+        });
+
+        // スワイプで設定画面を閉じる
+        this.setupSwipeToClose();
 
         // 新しい設定項目のイベント
         document.getElementById('targetPace').addEventListener('change', (e) => {
@@ -1089,6 +1115,83 @@ class DrinkingApp {
                 this.updateLastDrinkInfo();
             }
         }, 30000); // 30秒間隔
+    }
+
+    hideAllBottomSheets() {
+        // すべてのボトムシートを閉じる
+        const bottomSheets = document.querySelectorAll('.bottom-sheet');
+        const overlay = document.getElementById('overlay');
+
+        bottomSheets.forEach(sheet => {
+            sheet.classList.remove('active');
+        });
+        overlay.classList.remove('active');
+
+        // bodyのスクロールを復活
+        document.body.style.overflow = '';
+    }
+
+    setupSwipeToClose() {
+        let startY = 0;
+        let startTime = 0;
+
+        // 設定画面でのスワイプイベント
+        const settingsSheet = document.getElementById('settingsSheet');
+
+        settingsSheet.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }, { passive: true });
+
+        settingsSheet.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            const endTime = Date.now();
+            const deltaY = endY - startY;
+            const deltaTime = endTime - startTime;
+
+            // 下向きスワイプで十分な距離と速度があれば閉じる
+            if (deltaY > 100 && deltaTime < 300) {
+                this.hideBottomSheet('settingsSheet');
+            }
+        }, { passive: true });
+
+        // カスタムフォームでも同様の処理
+        const customForm = document.getElementById('customForm');
+
+        customForm.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }, { passive: true });
+
+        customForm.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            const endTime = Date.now();
+            const deltaY = endY - startY;
+            const deltaTime = endTime - startTime;
+
+            if (deltaY > 100 && deltaTime < 300) {
+                this.hideBottomSheet('customForm');
+            }
+        }, { passive: true });
+
+        // カスタム水分フォームでも同様の処理
+        const customWaterForm = document.getElementById('customWaterForm');
+
+        customWaterForm.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }, { passive: true });
+
+        customWaterForm.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            const endTime = Date.now();
+            const deltaY = endY - startY;
+            const deltaTime = endTime - startTime;
+
+            if (deltaY > 100 && deltaTime < 300) {
+                this.hideBottomSheet('customWaterForm');
+            }
+        }, { passive: true });
     }
 }
 

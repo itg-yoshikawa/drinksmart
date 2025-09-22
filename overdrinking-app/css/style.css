@@ -1300,6 +1300,24 @@ body {
     .action-icon {
         background: #2c2c2e;
     }
+
+    /* 前回飲酒情報のダークモード対応 */
+    .last-drink-info {
+        background: rgba(142, 142, 147, 0.2);
+    }
+
+    .last-drink-value {
+        color: #ffffff;
+    }
+
+    .elapsed-value {
+        color: #0a84ff;
+    }
+
+    .last-drink-label,
+    .elapsed-label {
+        color: #8e8e93;
+    }
 }
 
 /* PWA最適化 */

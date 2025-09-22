@@ -35,6 +35,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - **Pace Tracking**: Monitors drinking speed (minutes per drink) with warnings
 - **Smart Reminders**: Water intake reminders and pace warnings
 - **Favorites System**: Dynamic dashboard showing user's preferred drinks
+- **Last Drink Awareness**: Displays previous consumption time and elapsed duration for responsible pacing
 - **Mobile-First UI**: Smartphone app-like interface with bottom sheets and tab navigation
 
 ### UI Architecture
@@ -56,7 +57,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - Standard Git workflow: commit locally, then `git push` to deploy
 
 ### Version Management
-- Current version: 1.3.0 (displayed in app header)
+- Current version: 1.4.0 (displayed in app header)
 - Version locations to update on each release:
   - `overdrinking-app/manifest.json` - "version" field
   - `overdrinking-app/index.html` - `.app-version` span content
@@ -73,12 +74,20 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - `generateDrinkCards()` - Dynamic UI generation for drink selection
 - `toggleFavorite(drinkType)` - Favorites management with persistence
 - `updateFavoriteDrinksDisplay()` - Dashboard favorite drinks sync
+- `updateLastDrinkInfo()` - Updates last drink time and elapsed duration display
+- `formatElapsedTime(milliseconds)` - Converts time differences to human-readable format (hours/minutes/seconds)
+- `startLastDrinkUpdateTimer()` - 30-second interval timer for real-time elapsed time updates
+- `setupSwipeToClose()` - Touch gesture handling for mobile bottom sheet interactions
+- `hideAllBottomSheets()` - Universal modal closing function for emergency situations
 
 ### Event Handling Patterns
 - **Event Delegation**: Use event delegation for dynamically generated elements
 - **Event Bubbling Control**: For nested interactive elements (like favorite buttons inside drink cards), use `preventDefault()` and `stopPropagation()` to prevent parent element interference
 - **Z-index Management**: Interactive buttons in nested layouts need `position: relative; z-index: 2` to ensure clickability
 - **Priority Handling**: Process specific button clicks (favorites, add) before general container clicks
+- **Mobile Touch Events**: Combine `click` and `touchend` events for reliable mobile interaction, especially for modal close buttons
+- **Swipe Gestures**: Implement swipe-to-close for bottom sheets with distance (100px) and time (300ms) thresholds
+- **Multiple Close Methods**: Provide ESC key, swipe down, overlay tap, and button tap for maximum accessibility
 
 ### UI/UX Design Patterns
 - **Progressive Enhancement**: Start with basic functionality, then layer on advanced features
@@ -87,12 +96,15 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - **Visual Hierarchy**: Use font size progression (48px → 28px → 20px) for information importance
 - **Conditional UI Elements**: Show/hide sections based on data availability (favorites bar appears only when favorites exist)
 - **Haptic Feedback**: Different vibration patterns for different actions (50ms for drinks, 30ms for tracking, custom patterns for favorites)
+- **Last Drink Tracking**: Discrete display of previous drink time and elapsed duration for pacing awareness
 
 ### Styling Conventions
 - Uses CSS custom properties for theming
 - Mobile-first responsive design with hover states disabled on touch devices
 - iOS/Android-inspired design patterns with smooth animations
-- Dark mode support through CSS media queries
+- **Dark Mode Support**: Complete dark mode implementation through CSS media queries (`prefers-color-scheme: dark`)
+- **Dark Mode Colors**: Proper contrast ratios for all UI elements including new features like last drink info
+- **Accessibility**: Ensures text visibility and contrast in both light and dark themes
 
 ### Data Persistence Strategy
 - LocalStorage keys: `drinkingApp_data`, `drinkingApp_settings`, `drinkingApp_favorites`
@@ -192,6 +204,37 @@ getRecommendedWaterIntake() {
 **Real-world Example**:
 - Beer 500ml (20g alcohol) → Recommended: 500ml water (max of 240ml, 500ml, 300ml)
 - User drinks 600ml water → Status: "Sufficient" (green, 120% of target)
+
+### Last Drink Awareness System
+**Purpose**: Helps users maintain responsible drinking pace by showing when they last consumed alcohol and how much time has elapsed.
+
+**Implementation**:
+```javascript
+// Discrete display between main stats and secondary stats
+<div class="last-drink-info" id="lastDrinkInfo">
+    <div class="last-drink-time">
+        <span class="last-drink-label">前回:</span>
+        <span class="last-drink-value" id="lastDrinkTime">14:30</span>
+    </div>
+    <div class="last-drink-elapsed">
+        <span class="elapsed-value" id="timeSinceLastDrink">45分</span>
+        <span class="elapsed-label">経過</span>
+    </div>
+</div>
+```
+
+**Key Features**:
+- **Conditional Visibility**: Only shows when drinks have been recorded
+- **Real-time Updates**: Elapsed time updates every 30 seconds via `setInterval()`
+- **Time Formatting**: Smart display (seconds → minutes → hours/minutes)
+- **Discrete Design**: Subtle background with muted colors to avoid UI clutter
+- **Dark Mode Compatible**: Proper contrast ratios for both light and dark themes
+
+**Design Rationale**:
+- **Positioning**: Between main stats and secondary stats for high visibility without interference
+- **Subtle Styling**: Uses `rgba(142, 142, 147, 0.1)` background to remain unobtrusive
+- **Information Architecture**: Time on left, elapsed duration on right for logical flow
+- **Color Coding**: Blue accent for elapsed time to draw attention to pacing information
 
 ## Deployment and Distribution
 
