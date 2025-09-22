@@ -74,6 +74,10 @@
                     <div class="stat-card">
                         <div class="stat-value" id="bloodAlcohol">0.00%</div>
                         <div class="stat-label">血中濃度</div>
+                        <div class="stat-status" id="bacStatus">
+                            <span class="status-icon" id="bacIcon">😊</span>
+                            <span class="status-text" id="bacText">正常</span>
+                        </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="soberTime">0時間</div>
@@ -217,6 +221,13 @@
         </div>
         <div class="bottom-sheet-content">
             <div class="setting-section">
+                <div class="input-group">
+                    <label>性別</label>
+                    <select id="gender">
+                        <option value="male">男性</option>
+                        <option value="female">女性</option>
+                    </select>
+                </div>
                 <div class="input-group">
                     <label>体重 (kg)</label>
                     <input type="number" id="bodyWeight" value="77">

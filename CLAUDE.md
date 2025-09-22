@@ -21,6 +21,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - `toiletVisits[]` - Toilet visit frequency tracking
 - `drinkTypes[]` - Predefined drink database with alcohol content and volumes
 - `favoriteDrinks[]` - User's favorite drinks for quick access
+- `bacLevels[]` - Medical blood alcohol concentration ranges with status indicators
 
 ### Data Management
 - **Persistence**: All data stored in LocalStorage with automatic daily reset
@@ -28,7 +29,8 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - **Settings**: Body weight, daily limits, pace targets, and reminder intervals
 
 ### Key Features
-- **Blood Alcohol Calculation**: Real-time BAC calculation based on body weight and consumption
+- **Blood Alcohol Calculation**: Real-time BAC calculation using Widmark formula with medical accuracy
+- **BAC Status Display**: Visual alcohol impairment level indicators with medical terminology
 - **Pace Tracking**: Monitors drinking speed (minutes per drink) with warnings
 - **Smart Reminders**: Water intake reminders and pace warnings
 - **Favorites System**: Dynamic dashboard showing user's preferred drinks
@@ -64,7 +66,8 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 
 ### Key Methods
 - `addDrink(type, volume, alcohol)` - Core consumption tracking
-- `calculateBloodAlcohol()` - BAC calculation using Widmark formula
+- `calculateBloodAlcoholContent()` - BAC calculation using Widmark formula with time-based metabolism
+- `getBacStatus(bac)` - Maps BAC percentage to medical impairment levels
 - `generateDrinkCards()` - Dynamic UI generation for drink selection
 - `toggleFavorite(drinkType)` - Favorites management with persistence
 - `updateFavoriteDrinksDisplay()` - Dashboard favorite drinks sync
@@ -130,6 +133,35 @@ When making significant changes, follow this pattern:
 2. **Update CLAUDE.md**: Current version reference
 3. **Commit with detailed changelog**: Include version in commit message and describe all changes
 4. **Use semantic versioning**: PATCH for fixes, MINOR for features, MAJOR for breaking changes
+
+## Critical Medical Calculations
+
+### Blood Alcohol Content (BAC) Calculation
+**Widmark Formula Implementation**: The app uses the medically accurate Widmark formula for BAC calculation:
+
+```javascript
+// Correct Widmark formula with proper unit conversion
+const initialBAC = (totalAlcohol * 0.8) / (this.bodyWeight * bodyFactor) / 10;
+```
+
+**Key Implementation Details**:
+- **Unit Conversion Critical**: The factor of 0.8 (alcohol density) and division by 10 are essential for correct percentage calculation
+- **Gender Factors**: Male = 0.7, Female = 0.6 (body water content coefficients)
+- **Metabolism Rate**: 0.015%/hour (standard alcohol elimination rate)
+- **Common Error**: Using `(totalAlcohol / (bodyWeight * bodyFactor))` without proper conversion yields incorrect results 10x higher
+
+**Medical BAC Reference Ranges**:
+- 0.00-0.02%: 正常 (Normal)
+- 0.02-0.05%: 爽快期 (Euphoric stage)
+- 0.05-0.11%: ほろ酔い期 (Light intoxication)
+- 0.11-0.16%: 酩酊初期 (Early intoxication)
+- 0.16-0.31%: 酩酊極期 (Severe intoxication)
+- 0.31-0.41%: 泥酔期 (Stupor)
+- 0.41%+: 昏睡期 (Coma risk)
+
+**Validation Example**:
+- Beer 500ml (20g alcohol), 77kg male → 0.03% BAC (爽快期)
+- This should result in "爽快期" (euphoric stage), not higher levels
 
 ## Deployment and Distribution
 

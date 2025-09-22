@@ -4,9 +4,11 @@ class DrinkingApp {
         this.waterIntakes = [];
         this.toiletVisits = [];
         this.bodyWeight = 77;
+        this.gender = 'male'; // 'male' or 'female'
         this.dailyLimit = 20;
         this.targetPace = 30; // 分/杯
         this.waterReminderInterval = 20; // 分
+        this.metabolismRate = 0.15; // %/時間（アルコール代謝速度）
         this.isCustomFormVisible = false;
         this.isCustomWaterFormVisible = false;
         this.waterReminderTimer = null;
@@ -23,6 +25,17 @@ class DrinkingApp {
             { type: 'sparkling_wine', name: 'スパークリング', emoji: '🥂', volume: 120, alcohol: 12, info: '120ml (12%)' },
             { type: 'whiskey', name: 'ウイスキー', emoji: '🥃', volume: 30, alcohol: 40, info: '30ml (40%)' },
             { type: 'shochu', name: '焼酎', emoji: '🍺', volume: 90, alcohol: 25, info: '90ml (25%)' }
+        ];
+
+        // 血中アルコール濃度レベルの定義（医学的基準）
+        this.bacLevels = [
+            { min: 0, max: 0.02, status: "正常", className: "normal", icon: "😊" },
+            { min: 0.02, max: 0.05, status: "爽快期", className: "mild", icon: "🙂" },
+            { min: 0.05, max: 0.11, status: "ほろ酔い期", className: "tipsy", icon: "😅" },
+            { min: 0.11, max: 0.16, status: "酩酊初期", className: "drunk", icon: "😵" },
+            { min: 0.16, max: 0.31, status: "酩酊極期", className: "very-drunk", icon: "🤢" },
+            { min: 0.31, max: 0.41, status: "泥酔期", className: "dangerous", icon: "🤮" },
+            { min: 0.41, max: Infinity, status: "昏睡期", className: "dangerous", icon: "🚨" }
         ];
 
         this.init();
@@ -198,10 +211,27 @@ class DrinkingApp {
         });
 
         // 設定の変更イベント
+        document.getElementById('gender').addEventListener('change', (e) => {
+            this.gender = e.target.value;
+            this.saveSettings();
+            this.updateDisplay();
+        });
+
         document.getElementById('bodyWeight').addEventListener('change', (e) => {
             this.bodyWeight = parseInt(e.target.value);
             this.saveSettings();
             this.updateDisplay();
+        });
+
+        document.getElementById('targetPace').addEventListener('change', (e) => {
+            this.targetPace = parseInt(e.target.value);
+            this.saveSettings();
+        });
+
+        document.getElementById('waterReminder').addEventListener('change', (e) => {
+            this.waterReminderInterval = parseInt(e.target.value);
+            this.saveSettings();
+            this.restartWaterReminder();
         });
 
         document.getElementById('dailyLimit').addEventListener('change', (e) => {
@@ -373,16 +403,48 @@ class DrinkingApp {
     }
 
     calculateBloodAlcoholContent() {
+        if (this.drinks.length === 0) return 0;
+
         const totalAlcohol = this.getTotalAlcohol();
-        // 簡易的な血中アルコール濃度計算
-        // 実際の計算はより複雑ですが、目安として使用
-        // BAC = (アルコール量(g) / (体重(kg) × 0.7)) × 100
-        const bac = (totalAlcohol / (this.bodyWeight * 0.7)) * 100;
-        return Math.round(bac * 100) / 100;
+
+        // Widmark公式による血中アルコール濃度計算
+        // BAC = (A / (W × r)) - (β × t)
+        // A: 摂取した純アルコール量 (g)
+        // W: 体重 (kg)
+        // r: 性別係数 (男性: 0.7, 女性: 0.6)
+        // β: アルコール代謝速度 (0.15%/時間)
+        // t: 飲酒開始からの経過時間 (時間)
+
+        const bodyFactor = this.gender === 'male' ? 0.7 : 0.6;
+        const now = new Date();
+        const drinkingStartTime = this.firstDrinkTime || this.drinks[0].timestamp;
+        const elapsedHours = (now - drinkingStartTime) / (1000 * 60 * 60);
+
+        // 初期BAC計算（Widmark公式）
+        // BAC(%) = (アルコール量(g) × 0.8) / (体重(kg) × 体水分率) × 100 / 1000
+        const initialBAC = (totalAlcohol * 0.8) / (this.bodyWeight * bodyFactor) / 10;
+
+        // 代謝による減少を考慮（0.15g/dL/時間 = 0.015%/時間）
+        const metabolizedBAC = 0.015 * elapsedHours;
+
+        // 最終BAC（負の値にならないように）
+        const finalBAC = Math.max(0, initialBAC - metabolizedBAC);
+
+        return Math.round(finalBAC * 100) / 100;
     }
 
     getTotalAlcohol() {
         return this.drinks.reduce((total, drink) => total + drink.pureAlcohol, 0);
+    }
+
+    getBacStatus(bac) {
+        for (let level of this.bacLevels) {
+            if (bac >= level.min && bac < level.max) {
+                return level;
+            }
+        }
+        // デフォルト（危険レベル）
+        return this.bacLevels[this.bacLevels.length - 1];
     }
 
     getTotalWater() {
@@ -411,19 +473,22 @@ class DrinkingApp {
     }
 
     calculateSoberTime() {
-        const totalAlcohol = this.getTotalAlcohol();
-        if (totalAlcohol === 0) return '0時間';
+        const currentBAC = this.calculateBloodAlcoholContent();
+        if (currentBAC === 0) return '0時間';
 
-        // アルコールの代謝速度：約1時間に7-8g（体重70kgの場合）
-        // 体重による補正を加える
-        const metabolismRate = (this.bodyWeight / 70) * 7.5; // g/時間
-        const soberHours = totalAlcohol / metabolismRate;
+        // BAC 0.05%を完全しらふとする閾値
+        const soberThreshold = 0.05;
 
-        if (soberHours < 1) {
-            return `${Math.round(soberHours * 60)}分`;
+        if (currentBAC <= soberThreshold) return '0時間';
+
+        // 代謝速度による時間計算
+        const hoursToSober = (currentBAC - soberThreshold) / this.metabolismRate;
+
+        if (hoursToSober < 1) {
+            return `${Math.round(hoursToSober * 60)}分`;
         } else {
-            const hours = Math.floor(soberHours);
-            const minutes = Math.round((soberHours - hours) * 60);
+            const hours = Math.floor(hoursToSober);
+            const minutes = Math.round((hoursToSober - hours) * 60);
             return minutes > 0 ? `${hours}時間${minutes}分` : `${hours}時間`;
         }
     }
@@ -449,6 +514,19 @@ class DrinkingApp {
         document.getElementById('currentPace').textContent = currentPace;
         document.getElementById('soberTime').textContent = soberTime;
 
+        // 血中アルコール濃度の状態表示更新
+        const bacStatus = this.getBacStatus(bac);
+        const bacIcon = document.getElementById('bacIcon');
+        const bacText = document.getElementById('bacText');
+
+        bacIcon.textContent = bacStatus.icon;
+        bacText.textContent = bacStatus.status;
+
+        // 既存のクラスを削除
+        bacText.className = 'status-text';
+        // 新しいクラスを追加
+        bacText.classList.add(bacStatus.className);
+
         // プログレスバー更新
         const progressFill = document.getElementById('progressFill');
         progressFill.style.width = `${progressPercent}%`;
@@ -465,6 +543,7 @@ class DrinkingApp {
         this.updateHistory();
 
         // 設定値更新
+        document.getElementById('gender').value = this.gender;
         document.getElementById('bodyWeight').value = this.bodyWeight;
         document.getElementById('dailyLimit').value = this.dailyLimit;
         document.getElementById('targetPace').value = this.targetPace;
@@ -776,6 +855,7 @@ class DrinkingApp {
 
     saveSettings() {
         const settings = {
+            gender: this.gender,
             bodyWeight: this.bodyWeight,
             dailyLimit: this.dailyLimit,
             targetPace: this.targetPace,
@@ -789,6 +869,7 @@ class DrinkingApp {
         if (settings) {
             try {
                 const parsed = JSON.parse(settings);
+                this.gender = parsed.gender || 'male';
                 this.bodyWeight = parsed.bodyWeight || 77;
                 this.dailyLimit = parsed.dailyLimit || 20;
                 this.targetPace = parsed.targetPace || 30;
