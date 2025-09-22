@@ -9,6 +9,7 @@ class DrinkingApp {
         this.targetPace = 30; // 分/杯
         this.waterReminderInterval = 20; // 分
         this.metabolismRate = 0.15; // %/時間（アルコール代謝速度）
+        this.vibrationEnabled = true; // 振動フィードバック有効
         this.isCustomFormVisible = false;
         this.isCustomWaterFormVisible = false;
         this.waterReminderTimer = null;
@@ -238,6 +239,11 @@ class DrinkingApp {
             this.dailyLimit = parseInt(e.target.value);
             this.saveSettings();
             this.updateDisplay();
+        });
+
+        document.getElementById('vibrationEnabled').addEventListener('change', (e) => {
+            this.vibrationEnabled = e.target.checked;
+            this.saveSettings();
         });
 
         // 記録クリアボタン
@@ -590,6 +596,7 @@ class DrinkingApp {
         document.getElementById('dailyLimit').value = this.dailyLimit;
         document.getElementById('targetPace').value = this.targetPace;
         document.getElementById('waterReminder').value = this.waterReminderInterval;
+        document.getElementById('vibrationEnabled').checked = this.vibrationEnabled;
     }
 
     updateHistory() {
@@ -901,7 +908,8 @@ class DrinkingApp {
             bodyWeight: this.bodyWeight,
             dailyLimit: this.dailyLimit,
             targetPace: this.targetPace,
-            waterReminderInterval: this.waterReminderInterval
+            waterReminderInterval: this.waterReminderInterval,
+            vibrationEnabled: this.vibrationEnabled
         };
         localStorage.setItem('drinkingApp_settings', JSON.stringify(settings));
     }
@@ -916,6 +924,7 @@ class DrinkingApp {
                 this.dailyLimit = parsed.dailyLimit || 20;
                 this.targetPace = parsed.targetPace || 30;
                 this.waterReminderInterval = parsed.waterReminderInterval || 20;
+                this.vibrationEnabled = parsed.vibrationEnabled !== undefined ? parsed.vibrationEnabled : true;
             } catch (e) {
                 console.error('設定の読み込みに失敗しました:', e);
             }
@@ -955,9 +964,44 @@ class DrinkingApp {
     }
 
     vibrate(pattern) {
-        if ('vibrate' in navigator) {
-            navigator.vibrate(pattern);
+        // 振動設定が無効の場合は何もしない
+        if (!this.vibrationEnabled) {
+            return;
         }
+
+        // Web Vibration API対応チェック
+        if ('vibrate' in navigator) {
+            try {
+                // 振動実行
+                const result = navigator.vibrate(pattern);
+                console.log('振動API実行:', result ? '成功' : '失敗');
+
+                // 振動が失敗した場合は代替フィードバックを表示
+                if (!result) {
+                    this.showVibrationFallback();
+                }
+            } catch (error) {
+                console.log('振動API エラー:', error);
+                this.showVibrationFallback();
+            }
+        } else {
+            console.log('振動API 非対応ブラウザ');
+            this.showVibrationFallback();
+        }
+    }
+
+    showVibrationFallback() {
+        // 振動の代替フィードバック（視覚的効果）
+        const body = document.body;
+        body.style.transition = 'transform 0.1s ease';
+        body.style.transform = 'scale(1.005)';
+
+        setTimeout(() => {
+            body.style.transform = 'scale(1)';
+            setTimeout(() => {
+                body.style.transition = '';
+            }, 100);
+        }, 100);
     }
 
     updateFavoriteDrinksDisplay() {
