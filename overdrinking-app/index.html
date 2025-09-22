@@ -18,7 +18,7 @@
                 <div class="app-title">
                     <span class="app-icon">🍺</span>
                     <span>Drink Smart</span>
-                    <span class="app-version">v1.3.0</span>
+                    <span class="app-version">v1.4.0</span>
                 </div>
             </div>
             <div class="header-right">
@@ -70,6 +70,19 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 前回飲酒情報 -->
+                <div class="last-drink-info" id="lastDrinkInfo" style="display: none;">
+                    <div class="last-drink-time">
+                        <span class="last-drink-label">前回:</span>
+                        <span class="last-drink-value" id="lastDrinkTime">-</span>
+                    </div>
+                    <div class="last-drink-elapsed">
+                        <span class="elapsed-value" id="timeSinceLastDrink">-</span>
+                        <span class="elapsed-label">経過</span>
+                    </div>
+                </div>
+
                 <div class="secondary-stats">
                     <div class="stat-card">
                         <div class="stat-value" id="bloodAlcohol">0.00%</div>

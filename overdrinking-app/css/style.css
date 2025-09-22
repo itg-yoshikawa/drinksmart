@@ -342,6 +342,50 @@ body {
 .status-text.very-drunk { background: #f5b7b1; color: #c0392b; }
 .status-text.dangerous { background: #ec7063; color: #922b21; }
 
+/* 前回飲酒情報 */
+.last-drink-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(142, 142, 147, 0.1);
+    border-radius: 12px;
+    padding: 8px 16px;
+    margin: 16px 0;
+    font-size: 13px;
+}
+
+.last-drink-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.last-drink-label {
+    color: #8e8e93;
+    font-weight: 500;
+}
+
+.last-drink-value {
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+.last-drink-elapsed {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.elapsed-value {
+    color: #007AFF;
+    font-weight: 600;
+}
+
+.elapsed-label {
+    color: #8e8e93;
+    font-weight: 500;
+}
+
 /* 情報グリッド */
 .info-grid {
     display: grid;

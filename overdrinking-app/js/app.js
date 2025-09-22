@@ -53,6 +53,7 @@ class DrinkingApp {
     init() {
         this.updateDate();
         this.loadSettings();
+        this.startLastDrinkUpdateTimer();
     }
 
     updateDate() {
@@ -542,6 +543,9 @@ class DrinkingApp {
         document.getElementById('currentPace').textContent = currentPace;
         document.getElementById('soberTime').textContent = soberTime;
 
+        // 前回飲酒時間と経過時間の更新
+        this.updateLastDrinkInfo();
+
         // 推奨水分量の表示と評価
         const recommendedWater = this.getRecommendedWaterIntake();
         const waterTarget = document.getElementById('waterTarget');
@@ -1029,6 +1033,62 @@ class DrinkingApp {
         }).join('');
 
         quickFavoritesGrid.innerHTML = favoriteHTML;
+    }
+
+    updateLastDrinkInfo() {
+        const lastDrinkTimeElement = document.getElementById('lastDrinkTime');
+        const timeSinceLastDrinkElement = document.getElementById('timeSinceLastDrink');
+        const lastDrinkInfoElement = document.getElementById('lastDrinkInfo');
+
+        if (this.drinks.length === 0) {
+            // 飲酒記録がない場合は非表示
+            lastDrinkInfoElement.style.display = 'none';
+            return;
+        }
+
+        // 飲酒記録がある場合は表示
+        lastDrinkInfoElement.style.display = 'flex';
+
+        // 最後の飲酒記録を取得
+        const lastDrink = this.drinks[this.drinks.length - 1];
+        const lastDrinkTime = new Date(lastDrink.timestamp);
+        const now = new Date();
+
+        // 前回飲酒時間を表示
+        const timeStr = lastDrinkTime.toLocaleTimeString('ja-JP', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        lastDrinkTimeElement.textContent = timeStr;
+
+        // 経過時間を計算
+        const timeDiff = now - lastDrinkTime;
+        const elapsedTimeStr = this.formatElapsedTime(timeDiff);
+        timeSinceLastDrinkElement.textContent = elapsedTimeStr;
+    }
+
+    formatElapsedTime(milliseconds) {
+        const seconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        if (hours > 0) {
+            const remainingMinutes = minutes % 60;
+            return `${hours}時間${remainingMinutes}分`;
+        } else if (minutes > 0) {
+            return `${minutes}分`;
+        } else {
+            return `${seconds}秒`;
+        }
+    }
+
+    startLastDrinkUpdateTimer() {
+        // 30秒ごとに前回飲酒からの経過時間を更新
+        setInterval(() => {
+            if (this.drinks.length > 0) {
+                this.updateLastDrinkInfo();
+            }
+        }, 30000); // 30秒間隔
     }
 }
 
