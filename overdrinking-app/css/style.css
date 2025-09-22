@@ -798,6 +798,39 @@ body {
     animation: slideInRight 0.3s ease;
 }
 
+.item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.delete-item-btn {
+    background: #ff3b30;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.delete-item-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+}
+
+.delete-item-btn:active {
+    transform: scale(0.95);
+}
+
 .water-item {
     border-left-color: #5AC8FA;
 }
@@ -1028,6 +1061,12 @@ body {
         margin: 0 12px 16px 12px;
     }
 
+    .delete-item-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+
     .tab-content {
         padding: 0 12px;
     }
@@ -1130,6 +1169,14 @@ body {
         color: #ffffff;
     }
 
+    .delete-item-btn {
+        background: #ff453a;
+    }
+
+    .delete-item-btn:hover {
+        box-shadow: 0 2px 8px rgba(255, 69, 58, 0.4);
+    }
+
     .input-group input {
         background: #2c2c2e;
         border-color: #3a3a3c;
@@ -1159,7 +1206,8 @@ body {
     .info-card:hover,
     .quick-action-btn:hover,
     .drink-card:hover,
-    .drink-quick-btn:hover {
+    .drink-quick-btn:hover,
+    .delete-item-btn:hover {
         transform: none;
     }
 
@@ -1168,5 +1216,9 @@ body {
     .drink-card:active,
     .drink-quick-btn:active {
         transform: scale(0.96);
+    }
+
+    .delete-item-btn:active {
+        transform: scale(0.90);
     }
 }

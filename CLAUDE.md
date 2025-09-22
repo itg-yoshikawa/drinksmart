@@ -53,7 +53,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - Standard Git workflow: commit locally, then `git push` to deploy
 
 ### Version Management
-- Current version: 1.2.0 (displayed in app header)
+- Current version: 1.3.0 (displayed in app header)
 - Version locations to update on each release:
   - `overdrinking-app/manifest.json` - "version" field
   - `overdrinking-app/index.html` - `.app-version` span content
@@ -74,6 +74,14 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - **Event Bubbling Control**: For nested interactive elements (like favorite buttons inside drink cards), use `preventDefault()` and `stopPropagation()` to prevent parent element interference
 - **Z-index Management**: Interactive buttons in nested layouts need `position: relative; z-index: 2` to ensure clickability
 - **Priority Handling**: Process specific button clicks (favorites, add) before general container clicks
+
+### UI/UX Design Patterns
+- **Progressive Enhancement**: Start with basic functionality, then layer on advanced features
+- **Mobile-First Design**: Design for smallest screens first, then scale up
+- **Touch-Friendly Interactions**: Minimum 44px touch targets, hover states disabled on touch devices
+- **Visual Hierarchy**: Use font size progression (48px → 28px → 20px) for information importance
+- **Conditional UI Elements**: Show/hide sections based on data availability (favorites bar appears only when favorites exist)
+- **Haptic Feedback**: Different vibration patterns for different actions (50ms for drinks, 30ms for tracking, custom patterns for favorites)
 
 ### Styling Conventions
 - Uses CSS custom properties for theming
@@ -102,13 +110,26 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 ### Favorites System Implementation
 - Store favorites as array of drink type strings in `favoriteDrinks[]`
 - Use `toggleFavorite()` to add/remove items with immediate save to LocalStorage
-- Regenerate both drink cards and dashboard display when favorites change
-- Handle empty favorites state with instructional messages
+- Quick access bar shows up to 5 favorites in horizontal layout between navigation and content
+- Conditional visibility: `.quick-favorites.show` class controls display based on favorites availability
+- Regenerate both drink cards and quick access bar when favorites change
+- Auto-hide when no favorites exist to maintain clean UI
 
 ### UI State Management
 - Tab switching updates both navigation and content visibility classes
 - Bottom sheets use overlay and body scroll lock patterns
 - Real-time updates use immediate DOM manipulation rather than framework reactivity
+- Conditional rendering: Use CSS classes (`.show`, `.active`) to control element visibility
+- State-driven UI: Display elements based on data availability (favorites, drink history)
+
+### Version Increment Workflow
+When making significant changes, follow this pattern:
+1. **Update version numbers** in two locations:
+   - `manifest.json`: "version" field
+   - `index.html`: `.app-version` span content
+2. **Update CLAUDE.md**: Current version reference
+3. **Commit with detailed changelog**: Include version in commit message and describe all changes
+4. **Use semantic versioning**: PATCH for fixes, MINOR for features, MAJOR for breaking changes
 
 ## Deployment and Distribution
 

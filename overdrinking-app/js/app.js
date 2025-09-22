@@ -238,6 +238,17 @@ class DrinkingApp {
             this.hideBottomSheet('customWaterForm');
         });
 
+        // 個別削除ボタンのイベント（イベント委譲）
+        document.getElementById('drinkHistory').addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-item-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const type = e.target.getAttribute('data-type');
+                const id = e.target.getAttribute('data-id');
+                this.deleteRecord(type, id);
+            }
+        });
+
         // 設定ボトムシートのイベント
         document.getElementById('closeSettings').addEventListener('click', () => {
             this.hideBottomSheet('settingsSheet');
@@ -509,7 +520,10 @@ class DrinkingApp {
                                 ${record.volume}ml (${record.alcoholPercent}%) - ${time}
                             </div>
                         </div>
-                        <div class="drink-alcohol">${record.pureAlcohol}g</div>
+                        <div class="item-actions">
+                            <div class="drink-alcohol">${record.pureAlcohol}g</div>
+                            <button class="delete-item-btn" data-type="drink" data-id="${record.id}">×</button>
+                        </div>
                     </div>
                 `;
             } else if (record.type === 'water') {
@@ -521,7 +535,10 @@ class DrinkingApp {
                                 ${record.amount}ml - ${time}
                             </div>
                         </div>
-                        <div class="drink-alcohol">+${record.amount}ml</div>
+                        <div class="item-actions">
+                            <div class="drink-alcohol">+${record.amount}ml</div>
+                            <button class="delete-item-btn" data-type="water" data-id="${record.id}">×</button>
+                        </div>
                     </div>
                 `;
             } else if (record.type === 'toilet') {
@@ -533,7 +550,10 @@ class DrinkingApp {
                                 ${time}
                             </div>
                         </div>
-                        <div class="drink-alcohol">+1回</div>
+                        <div class="item-actions">
+                            <div class="drink-alcohol">+1回</div>
+                            <button class="delete-item-btn" data-type="toilet" data-id="${record.id}">×</button>
+                        </div>
                     </div>
                 `;
             }
@@ -642,6 +662,44 @@ class DrinkingApp {
 
     restartWaterReminder() {
         this.startWaterReminder();
+    }
+
+    deleteRecord(type, id) {
+        const numericId = parseInt(id);
+        let deleted = false;
+
+        if (type === 'drink') {
+            const index = this.drinks.findIndex(drink => drink.id === numericId);
+            if (index > -1) {
+                this.drinks.splice(index, 1);
+                deleted = true;
+            }
+        } else if (type === 'water') {
+            const index = this.waterIntakes.findIndex(water => water.id === numericId);
+            if (index > -1) {
+                this.waterIntakes.splice(index, 1);
+                deleted = true;
+            }
+        } else if (type === 'toilet') {
+            const index = this.toiletVisits.findIndex(toilet => toilet.id === numericId);
+            if (index > -1) {
+                this.toiletVisits.splice(index, 1);
+                deleted = true;
+            }
+        }
+
+        if (deleted) {
+            // 初回飲酒時刻のリセット（飲み物がすべて削除された場合）
+            if (this.drinks.length === 0) {
+                this.firstDrinkTime = null;
+            }
+
+            // 振動フィードバック（短い振動）
+            this.vibrate([20]);
+
+            this.saveData();
+            this.updateDisplay();
+        }
     }
 
     clearHistory() {
