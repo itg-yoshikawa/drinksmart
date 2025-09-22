@@ -177,16 +177,15 @@ class DrinkingApp {
             }
         });
 
-        // ダッシュボードのよく使う飲み物ボタンのイベント
-        document.querySelectorAll('.drink-quick-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const type = e.currentTarget.dataset.type;
-                this.addDrink(
-                    type,
-                    parseInt(e.currentTarget.dataset.volume),
-                    parseFloat(e.currentTarget.dataset.alcohol)
-                );
-            });
+        // ダッシュボードのよく使う飲み物ボタンのイベント（イベント委譲）
+        document.querySelector('.popular-drinks-grid').addEventListener('click', (e) => {
+            if (e.target.closest('.drink-quick-btn')) {
+                const btn = e.target.closest('.drink-quick-btn');
+                const type = btn.getAttribute('data-type');
+                const volume = parseInt(btn.getAttribute('data-volume'));
+                const alcohol = parseFloat(btn.getAttribute('data-alcohol'));
+                this.addDrink(type, volume, alcohol);
+            }
         });
 
         // カスタムフォームのイベント
@@ -280,6 +279,10 @@ class DrinkingApp {
         }
 
         this.drinks.push(drink);
+
+        // 振動フィードバック
+        this.vibrate([50]);
+
         this.saveData();
         this.updateDisplay();
         this.checkWarnings();
@@ -313,6 +316,10 @@ class DrinkingApp {
         };
 
         this.waterIntakes.push(waterIntake);
+
+        // 振動フィードバック（短い振動）
+        this.vibrate([30]);
+
         this.saveData();
         this.updateDisplay();
     }
@@ -337,6 +344,10 @@ class DrinkingApp {
         };
 
         this.toiletVisits.push(toiletVisit);
+
+        // 振動フィードバック（短い振動）
+        this.vibrate([30]);
+
         this.saveData();
         this.updateDisplay();
     }
@@ -734,8 +745,12 @@ class DrinkingApp {
         const index = this.favoriteDrinks.indexOf(drinkType);
         if (index > -1) {
             this.favoriteDrinks.splice(index, 1);
+            // お気に入り削除時の振動（短い1回）
+            this.vibrate([20]);
         } else {
             this.favoriteDrinks.push(drinkType);
+            // お気に入り追加時の振動（2回パターン）
+            this.vibrate([30, 50, 30]);
         }
         this.saveFavorites();
         this.generateDrinkCards();
@@ -755,6 +770,12 @@ class DrinkingApp {
                 console.error('お気に入りの読み込みに失敗しました:', e);
                 this.favoriteDrinks = [];
             }
+        }
+    }
+
+    vibrate(pattern) {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(pattern);
         }
     }
 

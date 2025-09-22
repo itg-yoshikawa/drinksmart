@@ -45,6 +45,12 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 ### Running the Application
 - Open `index.html` directly in a browser (no build process required)
 - For development, use a local server to avoid CORS issues with PWA features
+- Live demo: https://itg-yoshikawa.github.io/drinksmart/overdrinking-app/
+
+### Repository Management
+- GitHub repository: https://github.com/itg-yoshikawa/drinksmart.git
+- Main branch tracks origin/main for seamless deployment
+- Standard Git workflow: commit locally, then `git push` to deploy
 
 ### Key Methods
 - `addDrink(type, volume, alcohol)` - Core consumption tracking
@@ -93,3 +99,18 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - Tab switching updates both navigation and content visibility classes
 - Bottom sheets use overlay and body scroll lock patterns
 - Real-time updates use immediate DOM manipulation rather than framework reactivity
+
+## Deployment and Distribution
+
+### GitHub Pages Deployment
+- Static site deployment via GitHub Pages
+- Setup: Repository Settings → Pages → Deploy from branch → main → / (root)
+- Live URL: https://itg-yoshikawa.github.io/drinksmart/
+- App access: https://itg-yoshikawa.github.io/drinksmart/overdrinking-app/
+- No build process required - pure static files deployment
+- Automatic deployment on push to main branch (updates within minutes)
+
+### PWA Distribution
+- Installable as standalone app on mobile devices
+- Manifest.json configured for app store-like experience
+- Works offline once cached (service worker can be added for enhanced offline support)
