@@ -18,7 +18,7 @@
                 <div class="app-title">
                     <span class="app-icon">🍺</span>
                     <span>Drink Smart</span>
-                    <span class="app-version">v1.1.0</span>
+                    <span class="app-version">v1.2.0</span>
                 </div>
             </div>
             <div class="header-right">
@@ -47,6 +47,13 @@
                 <span class="tab-label">履歴</span>
             </button>
         </nav>
+
+        <!-- お気に入り飲み物クイックアクセス -->
+        <div class="quick-favorites" id="quickFavorites">
+            <div class="quick-favorites-grid" id="quickFavoritesGrid">
+                <!-- 動的に生成される -->
+            </div>
+        </div>
 
         <!-- ダッシュボードタブ -->
         <section class="tab-content active" id="dashboard">
@@ -111,27 +118,6 @@
                 </div>
             </div>
 
-            <!-- よく使う飲み物 -->
-            <div class="popular-drinks">
-                <h3>よく使う飲み物</h3>
-                <div class="popular-drinks-grid">
-                    <button class="drink-quick-btn" data-type="beer" data-alcohol="5" data-volume="350">
-                        <div class="drink-quick-icon">🍺</div>
-                        <div class="drink-quick-name">ビール</div>
-                        <div class="drink-quick-detail">350ml</div>
-                    </button>
-                    <button class="drink-quick-btn" data-type="highball" data-alcohol="7" data-volume="300">
-                        <div class="drink-quick-icon">🥃</div>
-                        <div class="drink-quick-name">ハイボール</div>
-                        <div class="drink-quick-detail">300ml</div>
-                    </button>
-                    <button class="drink-quick-btn" data-type="sake" data-alcohol="15" data-volume="180">
-                        <div class="drink-quick-icon">🍶</div>
-                        <div class="drink-quick-name">日本酒</div>
-                        <div class="drink-quick-detail">1合</div>
-                    </button>
-                </div>
-            </div>
 
             <!-- クイックアクション -->
             <div class="quick-actions">

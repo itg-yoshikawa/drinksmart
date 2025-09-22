@@ -53,7 +53,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - Standard Git workflow: commit locally, then `git push` to deploy
 
 ### Version Management
-- Current version: 1.1.0 (displayed in app header)
+- Current version: 1.2.0 (displayed in app header)
 - Version locations to update on each release:
   - `overdrinking-app/manifest.json` - "version" field
   - `overdrinking-app/index.html` - `.app-version` span content

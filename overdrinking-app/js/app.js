@@ -177,10 +177,10 @@ class DrinkingApp {
             }
         });
 
-        // ダッシュボードのよく使う飲み物ボタンのイベント（イベント委譲）
-        document.querySelector('.popular-drinks-grid').addEventListener('click', (e) => {
-            if (e.target.closest('.drink-quick-btn')) {
-                const btn = e.target.closest('.drink-quick-btn');
+        // クイックお気に入りボタンのイベント（イベント委譲）
+        document.getElementById('quickFavoritesGrid').addEventListener('click', (e) => {
+            if (e.target.closest('.quick-favorite-btn')) {
+                const btn = e.target.closest('.quick-favorite-btn');
                 const type = btn.getAttribute('data-type');
                 const volume = parseInt(btn.getAttribute('data-volume'));
                 const alcohol = parseFloat(btn.getAttribute('data-alcohol'));
@@ -780,32 +780,30 @@ class DrinkingApp {
     }
 
     updateFavoriteDrinksDisplay() {
-        const popularDrinksGrid = document.querySelector('.popular-drinks-grid');
+        const quickFavoritesGrid = document.getElementById('quickFavoritesGrid');
+        const quickFavorites = document.getElementById('quickFavorites');
 
         if (this.favoriteDrinks.length === 0) {
-            popularDrinksGrid.innerHTML = `
-                <div class="no-favorites">
-                    <p>お気に入りの飲み物がありません</p>
-                    <p>飲み物タブで★をタップしてお気に入りに追加しましょう</p>
-                </div>
-            `;
+            quickFavorites.classList.remove('show');
             return;
         }
 
-        const favoriteHTML = this.favoriteDrinks.slice(0, 3).map(drinkType => {
+        quickFavorites.classList.add('show');
+
+        const favoriteHTML = this.favoriteDrinks.slice(0, 5).map(drinkType => {
             const drink = this.drinkTypes.find(d => d.type === drinkType);
             if (!drink) return '';
 
             return `
-                <button class="drink-quick-btn" data-type="${drink.type}" data-alcohol="${drink.alcohol}" data-volume="${drink.volume}">
-                    <div class="drink-quick-icon">${drink.emoji}</div>
-                    <div class="drink-quick-name">${drink.name}</div>
-                    <div class="drink-quick-detail">${drink.volume}ml</div>
+                <button class="quick-favorite-btn" data-type="${drink.type}" data-alcohol="${drink.alcohol}" data-volume="${drink.volume}">
+                    <div class="quick-favorite-icon">${drink.emoji}</div>
+                    <div class="quick-favorite-name">${drink.name}</div>
+                    <div class="quick-favorite-detail">${drink.volume}ml</div>
                 </button>
             `;
         }).join('');
 
-        popularDrinksGrid.innerHTML = favoriteHTML;
+        quickFavoritesGrid.innerHTML = favoriteHTML;
     }
 }
 

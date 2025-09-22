@@ -115,6 +115,67 @@ body {
     box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
 }
 
+/* お気に入りクイックアクセス */
+.quick-favorites {
+    margin: 0 16px 20px;
+    display: none; /* デフォルトで非表示 */
+}
+
+.quick-favorites.show {
+    display: block;
+}
+
+.quick-favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.quick-favorite-btn {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 2px solid transparent;
+}
+
+.quick-favorite-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #007AFF;
+}
+
+.quick-favorite-btn:active {
+    transform: scale(0.98);
+}
+
+.quick-favorite-icon {
+    font-size: 24px;
+    margin-bottom: 2px;
+}
+
+.quick-favorite-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.quick-favorite-detail {
+    font-size: 8px;
+    color: #8e8e93;
+    text-align: center;
+}
+
 .tab-btn {
     flex: 1;
     display: flex;
@@ -182,7 +243,7 @@ body {
 }
 
 .stat-value {
-    font-size: 36px;
+    font-size: 48px;
     font-weight: 700;
     margin-bottom: 4px;
 }
@@ -244,7 +305,7 @@ body {
 }
 
 .stat-card .stat-value {
-    font-size: 20px;
+    font-size: 28px;
     font-weight: 600;
     color: #1a1a1a;
     margin-bottom: 4px;
@@ -294,7 +355,7 @@ body {
 }
 
 .info-value {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 600;
     color: #1a1a1a;
     margin-bottom: 2px;
@@ -1053,6 +1114,7 @@ body {
     .stat-card,
     .info-card,
     .quick-action-btn,
+    .quick-favorite-btn,
     .drink-card,
     .drink-quick-btn,
     .drink-item,
@@ -1063,6 +1125,7 @@ body {
     .stat-card .stat-value,
     .drink-name,
     .drink-quick-name,
+    .quick-favorite-name,
     .info-value {
         color: #ffffff;
     }
