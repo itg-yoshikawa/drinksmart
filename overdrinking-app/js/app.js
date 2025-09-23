@@ -48,6 +48,7 @@ class DrinkingApp {
         this.generateDrinkCards();
         this.updateDisplay();
         this.updateFavoriteDrinksDisplay();
+        this.updatePreviousDaySection();
         this.checkDateChange();
         this.startWaterReminder();
     }
@@ -370,6 +371,11 @@ class DrinkingApp {
 
         // 一言メモの初期表示
         this.updateMemoDisplay();
+
+        // 前日データの表示/非表示切り替え
+        document.getElementById('togglePreviousDay').addEventListener('click', () => {
+            this.togglePreviousDayDisplay();
+        });
 
         // エクスポート関連のイベント
         document.getElementById('exportHistory').addEventListener('click', () => {
@@ -989,6 +995,9 @@ class DrinkingApp {
                     if (parsed.dailyMemo) {
                         this.dailyMemo = parsed.dailyMemo;
                     }
+                } else if (parsed.date) {
+                    // 日付が異なる場合、前日のデータとして保存
+                    this.savePreviousDayData(parsed);
                 }
             } catch (e) {
                 console.error('データの読み込みに失敗しました:', e);
@@ -1472,6 +1481,185 @@ class DrinkingApp {
     getDrinkName(type) {
         const drinkType = this.drinkTypes.find(d => d.type === type);
         return drinkType ? drinkType.name : type;
+    }
+
+    savePreviousDayData(data) {
+        // 前日のデータとして保存（最大7日間保持）
+        try {
+            const previousDays = this.getPreviousDaysData();
+
+            // 新しいデータを先頭に追加
+            previousDays.unshift(data);
+
+            // 最大7日間のデータのみ保持
+            const limitedData = previousDays.slice(0, 7);
+
+            localStorage.setItem('drinkingApp_previousDays', JSON.stringify(limitedData));
+        } catch (e) {
+            console.error('前日データの保存に失敗しました:', e);
+        }
+    }
+
+    getPreviousDaysData() {
+        try {
+            const data = localStorage.getItem('drinkingApp_previousDays');
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error('前日データの読み込みに失敗しました:', e);
+            return [];
+        }
+    }
+
+    getPreviousDayData(daysAgo = 1) {
+        const previousDays = this.getPreviousDaysData();
+        if (previousDays.length >= daysAgo) {
+            return previousDays[daysAgo - 1];
+        }
+        return null;
+    }
+
+    formatPreviousDayData(data) {
+        if (!data) return null;
+
+        const date = new Date(data.date);
+        const drinks = data.drinks || [];
+        const waterIntakes = data.waterIntakes || [];
+        const toiletVisits = data.toiletVisits || [];
+
+        // 統計計算
+        const totalAlcohol = drinks.reduce((sum, drink) => sum + (drink.pureAlcohol || 0), 0);
+        const totalWater = waterIntakes.reduce((sum, water) => sum + (water.amount || 0), 0);
+
+        return {
+            date: date.toLocaleDateString('ja-JP', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short'
+            }),
+            rawDate: data.date,
+            dailyMemo: data.dailyMemo || '',
+            totalAlcohol,
+            totalWater,
+            drinksCount: drinks.length,
+            toiletCount: toiletVisits.length,
+            drinks: drinks.map(drink => ({
+                ...drink,
+                timestamp: new Date(drink.timestamp),
+                drinkName: this.getDrinkName(drink.type)
+            })),
+            waterIntakes: waterIntakes.map(water => ({
+                ...water,
+                timestamp: new Date(water.timestamp)
+            })),
+            toiletVisits: toiletVisits.map(toilet => ({
+                ...toilet,
+                timestamp: new Date(toilet.timestamp)
+            }))
+        };
+    }
+
+    updatePreviousDaySection() {
+        const previousDayData = this.getPreviousDayData(1);
+        const section = document.getElementById('previousDaySection');
+
+        if (previousDayData) {
+            const formattedData = this.formatPreviousDayData(previousDayData);
+            section.style.display = 'block';
+            this.updatePreviousDayDisplay(formattedData);
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    togglePreviousDayDisplay() {
+        const content = document.getElementById('previousDayContent');
+        const toggleBtn = document.getElementById('togglePreviousDay');
+
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            toggleBtn.textContent = '非表示';
+        } else {
+            content.style.display = 'none';
+            toggleBtn.textContent = '表示';
+        }
+
+        // 振動フィードバック
+        this.vibrate([30]);
+    }
+
+    updatePreviousDayDisplay(data) {
+        if (!data) return;
+
+        const summary = document.getElementById('previousDaySummary');
+
+        // タイムライン用のデータを統合・ソート
+        const timeline = [
+            ...data.drinks.map(drink => ({
+                time: drink.timestamp,
+                type: 'drink',
+                content: `${drink.drinkName} (${drink.volume}ml, ${drink.alcoholPercent}%, 純アルコール${drink.pureAlcohol}g)`
+            })),
+            ...data.waterIntakes.map(water => ({
+                time: water.timestamp,
+                type: 'water',
+                content: `水分摂取 (${water.amount}ml)`
+            })),
+            ...data.toiletVisits.map(toilet => ({
+                time: toilet.timestamp,
+                type: 'toilet',
+                content: 'トイレ'
+            }))
+        ].sort((a, b) => a.time - b.time);
+
+        summary.innerHTML = `
+            <div style="text-align: center; margin-bottom: 16px; font-weight: 600; color: #ff9500;">
+                ${data.date}
+            </div>
+
+            <div class="previous-day-stats">
+                <div class="previous-day-stat">
+                    <div class="previous-day-stat-value">${data.totalAlcohol}g</div>
+                    <div class="previous-day-stat-label">純アルコール</div>
+                </div>
+                <div class="previous-day-stat">
+                    <div class="previous-day-stat-value">${data.drinksCount}杯</div>
+                    <div class="previous-day-stat-label">飲み物</div>
+                </div>
+                <div class="previous-day-stat">
+                    <div class="previous-day-stat-value">${data.totalWater}ml</div>
+                    <div class="previous-day-stat-label">水分</div>
+                </div>
+                <div class="previous-day-stat">
+                    <div class="previous-day-stat-value">${data.toiletCount}回</div>
+                    <div class="previous-day-stat-label">トイレ</div>
+                </div>
+            </div>
+
+            ${data.dailyMemo ? `
+                <div class="previous-day-memo">
+                    <div class="previous-day-memo-title">その日の一言</div>
+                    <div class="previous-day-memo-content">${data.dailyMemo}</div>
+                </div>
+            ` : `
+                <div class="previous-day-memo">
+                    <div class="previous-day-memo-content previous-day-memo-empty">メモは記録されていません</div>
+                </div>
+            `}
+
+            ${timeline.length > 0 ? `
+                <div class="previous-day-timeline">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #333;">詳細タイムライン</div>
+                    ${timeline.map(item => `
+                        <div class="previous-day-timeline-item">
+                            <div class="previous-day-timeline-time">
+                                ${item.time.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <div class="previous-day-timeline-content">${item.content}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
+        `;
     }
 }
 
