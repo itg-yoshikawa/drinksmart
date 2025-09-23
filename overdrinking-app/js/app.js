@@ -16,6 +16,8 @@ class DrinkingApp {
         this.firstDrinkTime = null;
         this.favoriteDrinks = []; // お気に入り飲み物のリスト
         this.dailyMemo = ''; // その日の一言メモ
+        this.currentSession = null; // 現在の飲酒セッション
+        this.sessionTimeout = 4 * 60 * 60 * 1000; // 4時間（セッション終了判定）
 
         // デフォルト飲み物データ
         this.drinkTypes = [
@@ -44,6 +46,7 @@ class DrinkingApp {
         this.init();
         this.loadData();
         this.loadFavorites();
+        this.checkAndResumeSession();
         this.bindEvents();
         this.generateDrinkCards();
         this.updateDisplay();
@@ -51,6 +54,9 @@ class DrinkingApp {
         this.updatePreviousDaySection();
         this.checkDateChange();
         this.startWaterReminder();
+        this.startReminderTimer();
+        this.requestNotificationPermission();
+        this.initReminderEvents();
     }
 
     init() {
@@ -420,6 +426,9 @@ class DrinkingApp {
 
         this.drinks.push(drink);
 
+        // セッション活動を更新
+        this.updateSessionActivity();
+
         // 振動フィードバック
         this.vibrate([50]);
 
@@ -457,6 +466,9 @@ class DrinkingApp {
 
         this.waterIntakes.push(waterIntake);
 
+        // セッション活動を更新
+        this.updateSessionActivity();
+
         // 振動フィードバック（短い振動）
         this.vibrate([30]);
 
@@ -484,6 +496,9 @@ class DrinkingApp {
         };
 
         this.toiletVisits.push(toiletVisit);
+
+        // セッション活動を更新
+        this.updateSessionActivity();
 
         // 振動フィードバック（短い振動）
         this.vibrate([30]);
@@ -637,6 +652,9 @@ class DrinkingApp {
 
         // 前回飲酒時間と経過時間の更新
         this.updateLastDrinkInfo();
+
+        // セッション情報の更新
+        this.updateSessionInfo();
 
         // 推奨水分量の表示と評価
         const recommendedWater = this.getRecommendedWaterIntake();
@@ -935,15 +953,132 @@ class DrinkingApp {
         this.updateDisplay();
     }
 
+    // セッション管理
+    checkAndResumeSession() {
+        const sessionData = localStorage.getItem('drinkingSession');
+        if (!sessionData) return;
+
+        const session = JSON.parse(sessionData);
+        const now = new Date();
+        const lastActivity = new Date(session.lastActivity);
+        const timeSinceLastActivity = now - lastActivity;
+
+        // 4時間以内の活動であればセッション継続
+        if (timeSinceLastActivity < this.sessionTimeout) {
+            this.currentSession = session;
+            console.log('セッション継続中:', session);
+        } else {
+            // セッション終了
+            this.endSession();
+        }
+    }
+
+    startNewSession() {
+        const now = new Date();
+        this.currentSession = {
+            id: 'session_' + now.getTime(),
+            startTime: now,
+            lastActivity: now,
+            startDate: now.toDateString()
+        };
+        this.saveSession();
+        console.log('新しいセッション開始:', this.currentSession);
+    }
+
+    updateSessionActivity() {
+        if (!this.currentSession) {
+            this.startNewSession();
+        } else {
+            this.currentSession.lastActivity = new Date();
+            this.saveSession();
+        }
+    }
+
+    endSession() {
+        if (this.currentSession) {
+            // セッションの終了データを保存する場合はここで処理
+            console.log('セッション終了:', this.currentSession);
+            this.currentSession = null;
+            localStorage.removeItem('drinkingSession');
+            this.updateDisplay();
+        }
+    }
+
+    endSessionWithConfirmation() {
+        if (!this.currentSession) return;
+
+        const duration = new Date() - new Date(this.currentSession.startTime);
+        const hours = Math.floor(duration / (1000 * 60 * 60));
+        const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+
+        let durationText = '';
+        if (hours > 0) {
+            durationText = `${hours}時間${minutes}分`;
+        } else {
+            durationText = `${minutes}分`;
+        }
+
+        const confirmed = confirm(`飲酒セッションを終了しますか？\n継続時間: ${durationText}\n\n注意: セッション終了後は血中アルコール濃度の継続計算も停止されます。`);
+
+        if (confirmed) {
+            this.endSession();
+            alert('セッションを終了しました。お疲れ様でした！');
+        }
+    }
+
+    saveSession() {
+        if (this.currentSession) {
+            localStorage.setItem('drinkingSession', JSON.stringify(this.currentSession));
+        }
+    }
+
     checkDateChange() {
+        // セッション管理に変更：単純な日付変更ではリセットしない
         const lastDate = localStorage.getItem('drinkingApp_lastDate');
         const today = new Date().toDateString();
 
         if (lastDate && lastDate !== today) {
-            this.clearHistory();
+            // セッションが継続中でなければクリア
+            if (!this.currentSession) {
+                this.clearHistory();
+            }
         }
 
         localStorage.setItem('drinkingApp_lastDate', today);
+    }
+
+    updateSessionInfo() {
+        const sessionInfo = document.getElementById('sessionInfo');
+        const sessionStartTime = document.getElementById('sessionStartTime');
+        const sessionDuration = document.getElementById('sessionDuration');
+
+        if (!this.currentSession) {
+            sessionInfo.style.display = 'none';
+            return;
+        }
+
+        sessionInfo.style.display = 'block';
+
+        // セッション開始時刻の表示
+        const startTime = new Date(this.currentSession.startTime);
+        sessionStartTime.textContent = startTime.toLocaleTimeString('ja-JP', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        // セッション継続時間の表示
+        const now = new Date();
+        const duration = now - startTime;
+        const hours = Math.floor(duration / (1000 * 60 * 60));
+        const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+
+        let durationText = '';
+        if (hours > 0) {
+            durationText = `継続 ${hours}時間${minutes}分`;
+        } else {
+            durationText = `継続 ${minutes}分`;
+        }
+        sessionDuration.textContent = durationText;
     }
 
     saveData() {
@@ -1660,6 +1795,114 @@ class DrinkingApp {
                 </div>
             ` : ''}
         `;
+    }
+
+    // 記録忘れリマインダー関連メソッド
+    initReminderEvents() {
+        // リマインダーの「了解」ボタンイベント
+        const dismissBtn = document.getElementById('dismissReminder');
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                this.hideRecordReminder();
+            });
+        }
+
+        // セッション終了ボタンイベント
+        const endSessionBtn = document.getElementById('endSessionBtn');
+        if (endSessionBtn) {
+            endSessionBtn.addEventListener('click', () => {
+                this.endSessionWithConfirmation();
+            });
+        }
+    }
+
+    checkRecordReminder() {
+        const recordReminderMinutes = parseInt(localStorage.getItem('recordReminder') || '45');
+        const notificationEnabled = localStorage.getItem('notificationEnabled') === 'true';
+
+        if (!notificationEnabled || recordReminderMinutes <= 0) {
+            return;
+        }
+
+        const now = new Date();
+        const lastActivity = this.getLastActivity();
+
+        if (!lastActivity) {
+            return;
+        }
+
+        const timeSinceLastActivity = now - lastActivity;
+        const reminderThreshold = recordReminderMinutes * 60 * 1000; // ミリ秒に変換
+
+        if (timeSinceLastActivity > reminderThreshold) {
+            this.showRecordReminder(timeSinceLastActivity);
+        }
+    }
+
+    getLastActivity() {
+        const drinkHistory = JSON.parse(localStorage.getItem('drinkHistory') || '[]');
+        const waterHistory = JSON.parse(localStorage.getItem('waterIntakes') || '[]');
+        const toiletHistory = JSON.parse(localStorage.getItem('toiletVisits') || '[]');
+
+        const allActivities = [
+            ...drinkHistory.map(d => new Date(d.timestamp)),
+            ...waterHistory.map(w => new Date(w.timestamp)),
+            ...toiletHistory.map(t => new Date(t.timestamp))
+        ];
+
+        if (allActivities.length === 0) {
+            return null;
+        }
+
+        return Math.max(...allActivities);
+    }
+
+    showRecordReminder(timeSinceLastActivity) {
+        const card = document.getElementById('recordReminderCard');
+        const text = document.getElementById('recordReminderText');
+
+        if (!card || !text) return;
+
+        const hours = Math.floor(timeSinceLastActivity / (1000 * 60 * 60));
+        const minutes = Math.floor((timeSinceLastActivity % (1000 * 60 * 60)) / (1000 * 60));
+
+        let timeText = '';
+        if (hours > 0) {
+            timeText = `${hours}時間${minutes}分`;
+        } else {
+            timeText = `${minutes}分`;
+        }
+
+        text.textContent = `最後の記録から${timeText}経過しています`;
+        card.style.display = 'block';
+
+        // 振動フィードバック
+        const vibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
+        if (vibrationEnabled && navigator.vibrate) {
+            navigator.vibrate([100, 50, 100]);
+        }
+    }
+
+    hideRecordReminder() {
+        const card = document.getElementById('recordReminderCard');
+        if (card) {
+            card.style.display = 'none';
+        }
+    }
+
+    startReminderTimer() {
+        // 5分ごとにリマインダーをチェック
+        setInterval(() => {
+            this.checkRecordReminder();
+        }, 5 * 60 * 1000);
+    }
+
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                console.log('Notification permission:', permission);
+            });
+        }
     }
 }
 

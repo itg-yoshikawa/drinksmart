@@ -24,7 +24,8 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - `bacLevels[]` - Medical blood alcohol concentration ranges with status indicators
 
 ### Data Management
-- **Persistence**: All data stored in LocalStorage with automatic daily reset
+- **Persistence**: All data stored in LocalStorage with session-aware daily reset
+- **Session Management**: Drinking sessions persist across date changes for continuous tracking
 - **Data Structure**: Each drink record contains `{type, volume, alcoholPercent, pureAlcohol, timestamp}`
 - **Daily Memo**: Personal reflection notes stored with 200-character limit and real-time validation
 - **Settings**: Body weight, daily limits, pace targets, and reminder intervals
@@ -39,6 +40,8 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - **Last Drink Awareness**: Displays previous consumption time and elapsed duration for responsible pacing
 - **Daily Memo System**: Personal reflection notes with character limits and auto-save functionality
 - **Data Export**: Comprehensive export functionality supporting JSON, CSV, and human-readable text formats
+- **Session Management**: Cross-date session tracking for extended drinking events
+- **Record Reminders**: Intelligent reminders to prevent missed records during drinking
 - **Mobile-First UI**: Smartphone app-like interface with bottom sheets and tab navigation
 
 ### UI Architecture
@@ -60,7 +63,7 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - Standard Git workflow: commit locally, then `git push` to deploy
 
 ### Version Management
-- Current version: 1.6.0 (displayed in app header)
+- Current version: 1.9.0 (displayed in app header)
 - Version locations to update on each release:
   - `overdrinking-app/manifest.json` - "version" field
   - `overdrinking-app/index.html` - `.app-version` span content
@@ -87,6 +90,13 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - `generateJSONExport()` - Creates comprehensive JSON export with metadata and statistics
 - `generateCSVExport()` - Produces spreadsheet-compatible CSV with timeline data
 - `generateTextExport()` - Generates human-readable report with summary and detailed timeline
+- `checkAndResumeSession()` - Validates and restores previous drinking sessions on app launch
+- `startNewSession()` - Initiates new drinking session with unique ID and timestamp
+- `updateSessionActivity()` - Updates session activity timestamp for continuation logic
+- `endSession()` - Terminates current session and clears session data
+- `updateSessionInfo()` - Updates session UI display with duration and start time
+- `checkRecordReminder()` - Monitors time since last activity and shows reminder prompts
+- `showRecordReminder()` - Displays reminder card with elapsed time and vibration feedback
 
 ### Event Handling Patterns
 - **Event Delegation**: Use event delegation for dynamically generated elements
@@ -115,11 +125,12 @@ The entire application is encapsulated in a single `DrinkingApp` class with key 
 - **Accessibility**: Ensures text visibility and contrast in both light and dark themes
 
 ### Data Persistence Strategy
-- LocalStorage keys: `drinkingApp_data`, `drinkingApp_settings`, `drinkingApp_favorites`
+- LocalStorage keys: `drinkingApp_data`, `drinkingApp_settings`, `drinkingApp_favorites`, `drinkingSession`
 - Data includes: drinks, waterIntakes, toiletVisits, dailyMemo, and timestamp information
-- Automatic daily data reset based on date comparison
+- Session-aware data reset: Only resets when no active session exists
 - Error handling for corrupted localStorage data
 - Real-time saving for memo input with character limit validation
+- Session persistence across app restarts and date changes
 
 ### PWA Configuration
 - Configured for standalone mobile app experience
@@ -350,3 +361,154 @@ dailyMemoTextarea.addEventListener('input', (e) => {
 - Installable as standalone app on mobile devices
 - Manifest.json configured for app store-like experience
 - Works offline once cached (service worker can be added for enhanced offline support)
+
+## Session Management System (v1.8.0+)
+
+### Problem Solved
+Traditional daily data reset at midnight caused issues for drinking sessions that span across dates (e.g., parties until 2 AM). This resulted in:
+- Lost blood alcohol concentration tracking
+- Interrupted session continuity
+- Artificial data breaks during continuous drinking
+
+### Solution: Intelligent Session Management
+
+**Session Concept**: A drinking session represents continuous alcohol-related activity with automatic timeout after 4 hours of inactivity.
+
+**Key Components**:
+```javascript
+// Session data structure
+{
+  id: 'session_' + timestamp,
+  startTime: Date,
+  lastActivity: Date,
+  startDate: string // Original start date
+}
+```
+
+**Session Lifecycle**:
+1. **Auto-start**: First drink/water/toilet record creates new session
+2. **Activity tracking**: All user actions update `lastActivity` timestamp
+3. **Persistence**: Session survives app restarts and date changes
+4. **Auto-timeout**: Session ends after 4 hours of inactivity
+5. **Manual end**: User can explicitly end session via UI button
+
+**Date Change Behavior**:
+- **With Active Session**: Data persists across midnight, BAC calculation continues
+- **Without Session**: Normal daily reset occurs as before
+
+### UI Integration
+
+**Session Status Display**:
+- Orange gradient card showing "飲酒セッション継続中" (Drinking session in progress)
+- Start time and duration information
+- Manual end button with confirmation dialog
+
+**Session End Confirmation**:
+```javascript
+// User-friendly confirmation with session details
+const confirmed = confirm(`飲酒セッションを終了しますか？
+継続時間: ${durationText}
+
+注意: セッション終了後は血中アルコール濃度の継続計算も停止されます。`);
+```
+
+### Implementation Benefits
+
+1. **Medical Accuracy**: Continuous BAC tracking regardless of date changes
+2. **User Experience**: No data loss during extended drinking events
+3. **Flexibility**: Manual session control when needed
+4. **Safety**: Automatic timeout prevents indefinite sessions
+
+### Development Considerations
+
+**Session Recovery Logic**:
+```javascript
+checkAndResumeSession() {
+  const timeSinceLastActivity = now - lastActivity;
+  if (timeSinceLastActivity < this.sessionTimeout) {
+    // Resume session
+    this.currentSession = session;
+  } else {
+    // Session expired, clear data
+    this.endSession();
+  }
+}
+```
+
+**Activity Updates**: All user interactions call `updateSessionActivity()` to maintain session liveness:
+- Drink additions
+- Water intake recording
+- Toilet visit logging
+
+**Session Termination**: Occurs through:
+- 4-hour inactivity timeout
+- Manual user termination
+- Application-level reset (if needed)
+
+## Record Reminder System (v1.8.0+)
+
+### Problem Addressed
+As alcohol consumption progresses, users often forget to record subsequent drinks, water intake, or bathroom visits, leading to:
+- Inaccurate blood alcohol calculations
+- Poor hydration tracking
+- Unreliable pace monitoring
+
+### Intelligent Reminder Implementation
+
+**Core Logic**:
+```javascript
+checkRecordReminder() {
+  const timeSinceLastActivity = now - this.getLastActivity();
+  const reminderThreshold = recordReminderMinutes * 60 * 1000;
+
+  if (timeSinceLastActivity > reminderThreshold) {
+    this.showRecordReminder(timeSinceLastActivity);
+  }
+}
+```
+
+**Multi-Activity Tracking**:
+- Monitors drinks, water intake, and toilet visits collectively
+- Uses most recent activity timestamp across all categories
+- Configurable reminder interval (default: 45 minutes)
+
+**User Experience Features**:
+- Visual reminder card with pulsing animation
+- Elapsed time display in human-readable format (hours/minutes)
+- Vibration feedback for attention (if enabled)
+- Dismissible with "了解" (Understood) button
+- 5-minute check interval for timely reminders
+
+**Settings Integration**:
+- Configurable reminder interval in settings panel
+- Toggle for notification enable/disable
+- Respects existing vibration preferences
+
+**Technical Implementation**:
+```javascript
+// Reminder card styling with attention-grabbing design
+.reminder-card {
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+  animation: fadeIn 0.3s ease, pulse 2s ease-in-out infinite;
+  box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3);
+}
+```
+
+### Design Philosophy
+
+**Progressive Intervention**: Gentle reminders that don't interrupt the social experience but maintain safety awareness.
+
+**Contextual Timing**: 45-minute default based on:
+- Typical pace recommendations (20-30 minutes per drink)
+- Social drinking conversation gaps
+- Memory impairment onset timing
+
+**User Control**: Full configurability allows users to adjust based on personal drinking patterns and social contexts.
+
+### Future Enhancement Opportunities
+
+**Push Notifications**: Browser notification API integration for background reminders when app is minimized.
+
+**Smart Timing**: Machine learning from user patterns to optimize reminder timing.
+
+**Social Features**: Group drinking session coordination with shared reminders.
