@@ -512,3 +512,156 @@ checkRecordReminder() {
 **Smart Timing**: Machine learning from user patterns to optimize reminder timing.
 
 **Social Features**: Group drinking session coordination with shared reminders.
+
+## Future Feature Considerations
+
+This section documents potential features for future development, organized by category and priority.
+
+### 🎯 User Experience Enhancement
+
+#### 1. Drinking Pace Visualization
+- **Timeline Graph**: Visual representation of alcohol consumption over time
+- **Pace Warning**: Real-time visual alerts when drinking speed exceeds safe limits
+- **Ideal Pace Comparison**: Side-by-side display of actual vs. recommended pace
+- **Implementation Consideration**: Chart.js or D3.js for interactive graphs
+
+#### 2. Health Condition Tracking
+- **Hangover Rating System**: 5-point scale for next-day condition assessment
+- **Pattern Recognition**: Link drinking patterns to hangover severity
+- **Success Pattern Display**: "You felt great when you drank this way" insights
+- **Data Structure**: Add `nextDayCondition` field with rating and notes
+
+#### 3. Food/Snack Recording
+- **Empty Stomach Warning**: Alert when drinking without food
+- **Timeline Integration**: Chronological food and drink records
+- **Stomach Load Indicator**: Visual representation of stomach burden
+- **Implementation**: Add `foodIntakes[]` array similar to waterIntakes
+
+### 📊 Data Analysis & Insights
+
+#### 4. Weekly/Monthly Reports
+- **Trend Graphs**: Visual representation of weekly drinking patterns
+- **Compliance Rate**: Percentage of days within healthy limits
+- **Alcohol-Free Days**: Counter and streak tracking
+- **Export Format**: PDF report generation for medical consultations
+
+#### 5. Statistical Dashboard
+- **Peak Hours Analysis**: Identify when you drink most
+- **Drink Type Rankings**: Most consumed beverages with totals
+- **Average Consumption Trends**: Historical comparison over weeks/months
+- **Technical Approach**: Aggregate historical data from previous day storage
+
+#### 6. Goal Setting System
+- **Custom Goals**: User-defined targets (e.g., "2 alcohol-free days per week")
+- **Monthly Limits**: Total alcohol cap with progress tracking
+- **Achievement Badges**: Gamification elements for motivation
+- **UI Integration**: Dedicated "Goals" tab with progress visualization
+
+### 🔔 Smart Reminders & Notifications
+
+#### 7. Schedule Integration
+- **Next-Day Planning**: "Early start tomorrow" mode with stricter limits
+- **Important Event Warning**: Reduce drinking before critical days
+- **Bedtime Calculator**: Optimal sleep time based on current BAC
+- **Calendar API**: Optional integration with device calendar
+
+#### 8. Alcohol-Free Day Reminders
+- **Consecutive Days Counter**: Visual streak display
+- **Gentle Suggestions**: "Consider a break today" notifications
+- **Positive Reinforcement**: Celebration messages on achieving alcohol-free days
+- **Settings**: Configurable frequency and tone of reminders
+
+### 🤝 Social & Sharing Features
+
+#### 9. Social Drinking Records
+- **Friend Tags**: Record who you drank with
+- **Group Session Tracking**: Shared drinking event logs
+- **Pattern Insights**: "You tend to drink more with [friend name]" analysis
+- **Privacy**: All social features opt-in with granular controls
+
+#### 10. Data Sharing Capabilities
+- **Medical Reports**: Formatted exports for doctor consultations
+- **Family Safety Share**: Optional location/status sharing with trusted contacts
+- **Anonymous Benchmarking**: Compare your stats with anonymized aggregates
+- **Export Formats**: Medical-grade PDF with charts and summaries
+
+### 💡 Health & Safety
+
+#### 11. Hydration Optimization
+- **Body Water Estimation**: Real-time hydration status calculation
+- **Dehydration Warnings**: Risk alerts based on alcohol/water ratio
+- **Optimal Timing Notifications**: Smart water intake reminders
+- **Algorithm**: Enhanced Widmark formula including water balance
+
+#### 12. Safe Return Home Support
+- **Sobriety Assessment**: "Time to head home" suggestions based on BAC
+- **Last Train Integration**: Warning before final transportation option
+- **Safe Travel Criteria**: Clear indicators for safe journey home
+- **Location Services**: Optional last train/bus time lookup
+
+#### 13. Alcohol Clearance Prediction
+- **Driving Safety Timer**: When you'll be legal to drive again
+- **Wake-up Recommendations**: Alarm time suggestions based on BAC clearance
+- **Full Sobriety ETA**: Complete alcohol metabolism timeline
+- **Legal Compliance**: Country-specific BAC limits for driving
+
+### 🎨 UX & Accessibility Improvements
+
+#### 14. Quick Record Mode
+- **One-Tap Favorites**: "Usual drink" instant recording
+- **Session Presets**: Pre-configured scenarios (pub, bar, home)
+- **Voice Input**: Hands-free recording via speech recognition
+- **Shortcuts**: iOS/Android quick action support
+
+#### 15. Responsible Drinking Support
+- **Peer Pressure Counter**: Tips for declining "one more drink"
+- **Limit Achievement Celebration**: Positive feedback when reaching daily limit
+- **Refusal Script Suggestions**: Polite ways to say no
+- **Wellness Focus**: Emphasize health over restriction
+
+### 🔬 Advanced Technical Features
+
+#### 16. Machine Learning Integration
+- **Personalized BAC Models**: Learn individual metabolism rates over time
+- **Hangover Prediction**: AI-based next-day condition forecasting
+- **Optimal Patterns**: Recommend best drinking patterns for user's body
+- **Privacy-First ML**: On-device learning, no cloud data
+
+#### 17. Wearable Device Integration
+- **Heart Rate Monitoring**: Correlate with BAC for better accuracy
+- **Sleep Quality Tracking**: Link drinking to sleep patterns
+- **Activity Level**: Adjust metabolism calculations based on movement
+- **APIs**: Apple HealthKit, Google Fit, Fitbit integration
+
+#### 18. Multi-Language Support
+- **Internationalization**: English, Chinese, Korean language packs
+- **Localized Guidelines**: Country-specific drinking recommendations
+- **Cultural Adaptations**: Drink types and volumes by region
+- **Implementation**: i18n framework with JSON language files
+
+### Implementation Priority Framework
+
+**P0 - High Impact, Low Effort**:
+- Quick Record Mode (#14)
+- Weekly Reports (#4)
+- Alcohol-Free Day Counter (#8)
+
+**P1 - High Impact, Medium Effort**:
+- Drinking Pace Visualization (#1)
+- Health Condition Tracking (#2)
+- Goal Setting System (#6)
+
+**P2 - Medium Impact, Medium Effort**:
+- Food Recording (#3)
+- Schedule Integration (#7)
+- Safe Return Home Support (#12)
+
+**P3 - High Impact, High Effort**:
+- Machine Learning Integration (#16)
+- Wearable Device Integration (#17)
+- Statistical Dashboard (#5)
+
+**P4 - Future Research**:
+- Multi-Language Support (#18)
+- Social Features (#9, #10)
+- Advanced Analytics (#11, #13)
