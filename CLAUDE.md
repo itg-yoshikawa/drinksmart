@@ -362,6 +362,267 @@ dailyMemoTextarea.addEventListener('input', (e) => {
 - Manifest.json configured for app store-like experience
 - Works offline once cached (service worker can be added for enhanced offline support)
 
+## Capacitor Native App Development
+
+### Overview
+The app has been successfully migrated to support native iOS deployment using Capacitor, enabling access to native device features while maintaining the existing web codebase.
+
+### Setup and Configuration
+
+**Initial Setup Steps**:
+1. **Package.json Creation**: Define Capacitor dependencies and scripts
+2. **Capacitor Initialization**: `npx cap init "Drink Smart" "com.yoshikawa.drinksmart" --web-dir www`
+3. **iOS Platform Addition**: `npx cap add ios`
+4. **CocoaPods Installation**: Required for iOS native dependencies (`brew install cocoapods`)
+
+**Project Structure**:
+```
+overdrinking-app/
+├── www/                    # Web assets (HTML, CSS, JS)
+│   ├── index.html
+│   ├── css/
+│   ├── js/
+│   │   ├── app.js
+│   │   └── haptics.js     # New: Haptics abstraction layer
+│   └── images/
+├── ios/                    # Auto-generated iOS project (gitignored)
+├── capacitor.config.json   # Capacitor configuration
+└── package.json           # Node dependencies
+```
+
+### Capacitor Configuration (capacitor.config.json)
+
+```json
+{
+  "appId": "com.yoshikawa.drinksmart",
+  "appName": "Drink Smart",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#667eea",
+      "showSpinner": false
+    },
+    "Haptics": {
+      "enabled": true
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#488AFF"
+    }
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
+```
+
+### Haptics Implementation
+
+**Key Challenge**: Web Vibration API doesn't work on iOS, requiring native Haptics API.
+
+**Solution**: Created abstraction layer (`haptics.js`) that detects platform and uses appropriate API:
+
+```javascript
+class HapticsService {
+  async vibrate(pattern) {
+    if (Capacitor.isNativePlatform()) {
+      return this.nativeVibrate(pattern);  // iOS Taptic Engine
+    } else {
+      return this.webVibrate(pattern);     // Web Vibration API
+    }
+  }
+
+  async nativeVibrate(pattern) {
+    // Pattern-based Haptics selection
+    if (pattern[0] === 50) {
+      await Haptics.impact({ style: ImpactStyle.Medium });  // Drink added
+    } else if (pattern[0] === 30) {
+      await Haptics.impact({ style: ImpactStyle.Light });   // Water/Toilet
+    } else if (pattern.length > 1) {
+      await Haptics.notification({ type: NotificationType.Warning }); // Reminder
+    }
+  }
+}
+```
+
+**Haptics Mapping**:
+- **Light Impact**: Water intake, toilet visits (30ms pattern)
+- **Medium Impact**: Drink additions (50ms pattern)
+- **Heavy Impact**: Warnings (100ms+ pattern)
+- **Success Notification**: Favorite toggles, session end
+- **Warning Notification**: Record reminders, pace warnings
+
+### Bundle ID Management
+
+**Critical Issue**: Bundle identifiers must be globally unique in Apple's system.
+
+**Solution Process**:
+1. Initial attempt with `com.drinksmart.app` failed (already registered)
+2. Changed to team-specific: `com.yoshikawa.drinksmart`
+3. Synced changes: `npx cap sync ios`
+4. Xcode automatically registers new Bundle ID
+
+**Best Practice**: Use reverse domain notation with your organization/name:
+- Format: `com.[organization].[appname]`
+- Examples: `com.yoshikawa.drinksmart`, `jp.drinksmart.app`
+
+### Development Workflow
+
+**Common Commands**:
+```bash
+# Sync web changes to native project
+npm run sync
+# or
+npx cap sync ios
+
+# Open iOS project in Xcode
+npm run ios
+# or
+npx cap open ios
+
+# Update Capacitor and plugins
+npm run update
+# or
+npx cap update
+```
+
+**Typical Development Cycle**:
+1. Make changes to web files (HTML/CSS/JS)
+2. Run `npx cap sync ios` to copy changes
+3. Build and run in Xcode (or existing Xcode session auto-refreshes)
+4. Test on simulator or device
+
+### iOS-Specific Considerations
+
+**Signing & Capabilities** (in Xcode):
+- **Team**: Select your Apple Developer account (free account works for development)
+- **Bundle Identifier**: Must match capacitor.config.json appId
+- **Automatically manage signing**: Enable for easier certificate management
+- **Capabilities**: Add as needed (Push Notifications, HealthKit, etc.)
+
+**Required Dependencies**:
+- **Xcode**: Latest version (currently 26.0.1+)
+- **CocoaPods**: iOS dependency manager (`brew install cocoapods`)
+- **Node.js**: v18+ recommended
+- **Apple Developer Account**: Free tier sufficient for development/testing
+
+### Testing Strategy
+
+**Simulator Testing**:
+- Quick iteration for UI/UX
+- Haptics feel is simulated (not accurate)
+- Network conditions can be simulated
+- Various iOS versions available
+
+**Device Testing** (Recommended for Haptics):
+- Accurate Taptic Engine feedback
+- Real-world performance testing
+- True battery impact assessment
+- Actual notification experience
+
+**Haptics Verification Checklist**:
+- [ ] Drink addition (Medium vibration)
+- [ ] Water intake (Light vibration)
+- [ ] Toilet visit (Light vibration)
+- [ ] Favorite toggle (Success notification)
+- [ ] Record reminder (Warning notification)
+- [ ] Settings toggle (disable all haptics)
+
+### Git Integration
+
+**Added to .gitignore**:
+```
+# Capacitor
+overdrinking-app/ios/
+overdrinding-app/android/
+overdrinking-app/www/capacitor.config.json
+```
+
+**Rationale**: Native project folders are auto-generated and should not be version controlled. Only source files (capacitor.config.json, package.json) are tracked.
+
+### Troubleshooting
+
+**Common Issues**:
+
+1. **"pod install" fails**
+   - Solution: Install CocoaPods via Homebrew
+   - `brew install cocoapods`
+
+2. **Bundle ID already registered**
+   - Solution: Change appId in capacitor.config.json
+   - Use unique reverse domain notation
+
+3. **Xcode license not accepted**
+   - Solution: `sudo xcodebuild -license` (requires password)
+
+4. **Haptics not working**
+   - Check: Device has Taptic Engine (iPhone 8+)
+   - Check: Haptics enabled in Settings
+   - Check: System Haptics not disabled in iOS Settings
+
+5. **Changes not reflecting**
+   - Solution: Run `npx cap sync ios` after web changes
+   - Ensure Xcode is using latest build
+
+### Future Native Features
+
+With Capacitor foundation in place, these native features are now accessible:
+
+**High Priority**:
+- **Local Notifications**: Scheduled reminders when app is closed
+- **Background Tasks**: Update BAC calculations in background
+- **HealthKit Integration**: Sync alcohol data to Apple Health
+
+**Medium Priority**:
+- **Geolocation**: Context-aware features (home vs. venue)
+- **Contacts**: Share data with emergency contacts
+- **Calendar**: Integrate with next-day schedule
+
+**Advanced**:
+- **Siri Shortcuts**: Voice recording ("Hey Siri, log a beer")
+- **Widgets**: At-a-glance BAC display on home screen
+- **App Clips**: Lightweight experience without full install
+
+### Performance Considerations
+
+**Web View Performance**:
+- Capacitor uses WKWebView (iOS native web renderer)
+- Performance nearly identical to Safari
+- LocalStorage works as expected
+- CSS animations hardware-accelerated
+
+**Bundle Size**:
+- Web assets: ~500KB (HTML/CSS/JS/Images)
+- Capacitor runtime: ~2MB
+- Native plugins: ~500KB each
+- Total app size: ~5-10MB (very lightweight)
+
+### App Store Preparation (Future)
+
+When ready for App Store submission:
+
+1. **Assets Required**:
+   - App icons (1024x1024 + various sizes)
+   - Launch screen/splash screen
+   - Screenshots (various device sizes)
+   - Privacy policy URL
+
+2. **Configuration Updates**:
+   - Version number management
+   - Build number incrementing
+   - Production signing certificates
+
+3. **Capabilities Declaration**:
+   - Haptics usage description
+   - Notification permission rationale
+   - Any data collection policies
+
+4. **TestFlight Beta**:
+   - Internal testing with team
+   - External beta testing with users
+   - Collect feedback before public release
+
 ## Session Management System (v1.8.0+)
 
 ### Problem Solved

@@ -1,0 +1,1934 @@
+class DrinkingApp {
+    constructor() {
+        this.drinks = [];
+        this.waterIntakes = [];
+        this.toiletVisits = [];
+        this.bodyWeight = 77;
+        this.gender = 'male'; // 'male' or 'female'
+        this.dailyLimit = 20;
+        this.targetPace = 30; // 分/杯
+        this.waterReminderInterval = 20; // 分
+        this.metabolismRate = 0.15; // %/時間（アルコール代謝速度）
+        this.vibrationEnabled = true; // 振動フィードバック有効
+        this.isCustomFormVisible = false;
+        this.isCustomWaterFormVisible = false;
+        this.waterReminderTimer = null;
+        this.firstDrinkTime = null;
+        this.favoriteDrinks = []; // お気に入り飲み物のリスト
+        this.dailyMemo = ''; // その日の一言メモ
+        this.currentSession = null; // 現在の飲酒セッション
+        this.sessionTimeout = 4 * 60 * 60 * 1000; // 4時間（セッション終了判定）
+
+        // デフォルト飲み物データ
+        this.drinkTypes = [
+            { type: 'beer', name: 'ビール', emoji: '🍺', volume: 350, alcohol: 5, info: '350ml (5%)' },
+            { type: 'beer_large', name: 'ビール大', emoji: '🍺', volume: 500, alcohol: 5, info: '500ml (5%)' },
+            { type: 'highball', name: 'ハイボール', emoji: '🥃', volume: 300, alcohol: 7, info: '300ml (7%)' },
+            { type: 'highball_large', name: 'ハイボール大', emoji: '🥃', volume: 500, alcohol: 7, info: '500ml (7%)' },
+            { type: 'sake', name: '日本酒', emoji: '🍶', volume: 180, alcohol: 15, info: '1合 (15%)' },
+            { type: 'wine', name: 'ワイン', emoji: '🍷', volume: 120, alcohol: 12, info: '120ml (12%)' },
+            { type: 'sparkling_wine', name: 'スパークリング', emoji: '🥂', volume: 120, alcohol: 12, info: '120ml (12%)' },
+            { type: 'whiskey', name: 'ウイスキー', emoji: '🥃', volume: 30, alcohol: 40, info: '30ml (40%)' },
+            { type: 'shochu', name: '焼酎', emoji: '🍺', volume: 90, alcohol: 25, info: '90ml (25%)' }
+        ];
+
+        // 血中アルコール濃度レベルの定義（医学的基準）
+        this.bacLevels = [
+            { min: 0, max: 0.02, status: "正常", className: "normal", icon: "😊" },
+            { min: 0.02, max: 0.05, status: "爽快期", className: "mild", icon: "🙂" },
+            { min: 0.05, max: 0.11, status: "ほろ酔い期", className: "tipsy", icon: "😅" },
+            { min: 0.11, max: 0.16, status: "酩酊初期", className: "drunk", icon: "😵" },
+            { min: 0.16, max: 0.31, status: "酩酊極期", className: "very-drunk", icon: "🤢" },
+            { min: 0.31, max: 0.41, status: "泥酔期", className: "dangerous", icon: "🤮" },
+            { min: 0.41, max: Infinity, status: "昏睡期", className: "dangerous", icon: "🚨" }
+        ];
+
+        this.init();
+        this.loadData();
+        this.loadFavorites();
+        this.checkAndResumeSession();
+        this.bindEvents();
+        this.generateDrinkCards();
+        this.updateDisplay();
+        this.updateFavoriteDrinksDisplay();
+        this.updatePreviousDaySection();
+        this.checkDateChange();
+        this.startWaterReminder();
+        this.startReminderTimer();
+        this.requestNotificationPermission();
+        this.initReminderEvents();
+    }
+
+    init() {
+        this.updateDate();
+        this.loadSettings();
+        this.startLastDrinkUpdateTimer();
+    }
+
+    updateDate() {
+        const today = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const dateStr = today.toLocaleDateString('ja-JP', options);
+        document.getElementById('currentDate').textContent = dateStr;
+    }
+
+    switchTab(tabName) {
+        // すべてのタブボタンからactiveクラスを削除
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // すべてのタブコンテンツからactiveクラスを削除
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // 選択されたタブボタンとコンテンツにactiveクラスを追加
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+    }
+
+    showBottomSheet(sheetId) {
+        const sheet = document.getElementById(sheetId);
+        const overlay = document.getElementById('overlay');
+
+        sheet.classList.add('active');
+        overlay.classList.add('active');
+
+        // bodyのスクロールを無効化
+        document.body.style.overflow = 'hidden';
+    }
+
+    hideBottomSheet(sheetId) {
+        const sheet = document.getElementById(sheetId);
+        const overlay = document.getElementById('overlay');
+
+        sheet.classList.remove('active');
+        overlay.classList.remove('active');
+
+        // bodyのスクロールを復活
+        document.body.style.overflow = '';
+    }
+
+    hideAllBottomSheets() {
+        document.querySelectorAll('.bottom-sheet').forEach(sheet => {
+            sheet.classList.remove('active');
+        });
+        document.getElementById('overlay').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    generateDrinkCards() {
+        const drinkGrid = document.getElementById('drinkGrid');
+
+        const cardsHTML = this.drinkTypes.map(drink => {
+            const isFavorite = this.favoriteDrinks.includes(drink.type);
+            return `
+                <div class="drink-card" data-type="${drink.type}">
+                    <div class="drink-icon">${drink.emoji}</div>
+                    <div class="drink-name">${drink.name}</div>
+                    <div class="drink-info">${drink.info}</div>
+                    <div class="drink-actions">
+                        <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-type="${drink.type}">
+                            ${isFavorite ? '★' : '☆'}
+                        </button>
+                        <button class="add-drink-btn" data-type="${drink.type}" data-volume="${drink.volume}" data-alcohol="${drink.alcohol}">
+                            追加
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const customCard = `
+            <div class="drink-card custom-card">
+                <div class="drink-icon">🍹</div>
+                <div class="drink-name">カスタム</div>
+                <div class="drink-info">自由に設定</div>
+                <div class="drink-actions">
+                    <button class="add-drink-btn custom-btn" onclick="document.getElementById('customForm').classList.add('active'); document.getElementById('overlay').classList.add('active'); document.body.style.overflow = 'hidden';">
+                        追加
+                    </button>
+                </div>
+            </div>
+        `;
+
+        drinkGrid.innerHTML = cardsHTML + customCard;
+    }
+
+    bindEvents() {
+        // タブナビゲーション
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabName = e.currentTarget.dataset.tab;
+                this.switchTab(tabName);
+            });
+        });
+
+        // 設定ボタン
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            this.showBottomSheet('settingsSheet');
+        });
+
+        // 動的に生成される飲み物カードのイベント委譲
+        document.getElementById('drinkGrid').addEventListener('click', (e) => {
+            // お気に入りボタンのクリック処理（最優先）
+            if (e.target.classList.contains('favorite-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const type = e.target.getAttribute('data-type');
+                this.toggleFavorite(type);
+                return;
+            }
+
+            // 追加ボタンのクリック処理
+            if (e.target.classList.contains('add-drink-btn') && !e.target.classList.contains('custom-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const type = e.target.getAttribute('data-type');
+                const volume = parseInt(e.target.getAttribute('data-volume'));
+                const alcohol = parseFloat(e.target.getAttribute('data-alcohol'));
+                this.addDrink(type, volume, alcohol);
+                return;
+            }
+
+            // カスタムボタンのクリック処理
+            if (e.target.classList.contains('custom-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showBottomSheet('customForm');
+                return;
+            }
+        });
+
+        // クイックお気に入りボタンのイベント（イベント委譲）
+        document.getElementById('quickFavoritesGrid').addEventListener('click', (e) => {
+            if (e.target.closest('.quick-favorite-btn')) {
+                const btn = e.target.closest('.quick-favorite-btn');
+                const type = btn.getAttribute('data-type');
+                const volume = parseInt(btn.getAttribute('data-volume'));
+                const alcohol = parseFloat(btn.getAttribute('data-alcohol'));
+                this.addDrink(type, volume, alcohol);
+            }
+        });
+
+        // カスタムフォームのイベント
+        document.getElementById('addCustomDrink').addEventListener('click', () => {
+            this.addCustomDrink();
+        });
+
+        const cancelCustomBtn = document.getElementById('cancelCustom');
+        cancelCustomBtn.addEventListener('click', () => {
+            this.hideBottomSheet('customForm');
+        });
+        cancelCustomBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.hideBottomSheet('customForm');
+        });
+
+        // 設定の変更イベント
+        document.getElementById('gender').addEventListener('change', (e) => {
+            this.gender = e.target.value;
+            this.saveSettings();
+            this.updateDisplay();
+        });
+
+        document.getElementById('bodyWeight').addEventListener('change', (e) => {
+            this.bodyWeight = parseInt(e.target.value);
+            this.saveSettings();
+            this.updateDisplay();
+        });
+
+        document.getElementById('targetPace').addEventListener('change', (e) => {
+            this.targetPace = parseInt(e.target.value);
+            this.saveSettings();
+        });
+
+        document.getElementById('waterReminder').addEventListener('change', (e) => {
+            this.waterReminderInterval = parseInt(e.target.value);
+            this.saveSettings();
+            this.restartWaterReminder();
+        });
+
+        document.getElementById('dailyLimit').addEventListener('change', (e) => {
+            this.dailyLimit = parseInt(e.target.value);
+            this.saveSettings();
+            this.updateDisplay();
+        });
+
+        document.getElementById('vibrationEnabled').addEventListener('change', (e) => {
+            this.vibrationEnabled = e.target.checked;
+            this.saveSettings();
+        });
+
+        // 記録クリアボタン
+        document.getElementById('clearHistory').addEventListener('click', () => {
+            if (confirm('今日の記録をすべてクリアしますか？')) {
+                this.clearHistory();
+            }
+        });
+
+        // 水分・トイレボタンのイベント
+        document.getElementById('addWater').addEventListener('click', () => {
+            this.addWater(200);
+        });
+
+        document.getElementById('addToilet').addEventListener('click', () => {
+            this.addToiletVisit();
+        });
+
+        document.getElementById('customWater').addEventListener('click', () => {
+            this.showBottomSheet('customWaterForm');
+        });
+
+        document.getElementById('addCustomWater').addEventListener('click', () => {
+            this.addCustomWater();
+        });
+
+        const cancelCustomWaterBtn = document.getElementById('cancelCustomWater');
+        cancelCustomWaterBtn.addEventListener('click', () => {
+            this.hideBottomSheet('customWaterForm');
+        });
+        cancelCustomWaterBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.hideBottomSheet('customWaterForm');
+        });
+
+        // 個別削除ボタンのイベント（イベント委譲）
+        document.getElementById('drinkHistory').addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-item-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const type = e.target.getAttribute('data-type');
+                const id = e.target.getAttribute('data-id');
+                this.deleteRecord(type, id);
+            }
+        });
+
+        // 設定ボトムシートのイベント - クリックとタッチの両方をサポート
+        const closeSettingsBtn = document.getElementById('closeSettings');
+        closeSettingsBtn.addEventListener('click', () => {
+            this.hideBottomSheet('settingsSheet');
+        });
+        closeSettingsBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.hideBottomSheet('settingsSheet');
+        });
+
+        // オーバーレイクリック
+        document.getElementById('overlay').addEventListener('click', () => {
+            this.hideAllBottomSheets();
+        });
+
+        // ESCキーで設定画面を閉じる
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.hideAllBottomSheets();
+            }
+        });
+
+        // スワイプで設定画面を閉じる
+        this.setupSwipeToClose();
+
+        // 新しい設定項目のイベント
+        document.getElementById('targetPace').addEventListener('change', (e) => {
+            this.targetPace = parseInt(e.target.value);
+            this.saveSettings();
+            this.updateDisplay();
+        });
+
+        document.getElementById('waterReminder').addEventListener('change', (e) => {
+            this.waterReminderInterval = parseInt(e.target.value);
+            this.saveSettings();
+            this.restartWaterReminder();
+        });
+
+        // 一言メモのイベント
+        const dailyMemoTextarea = document.getElementById('dailyMemo');
+        const memoCharCount = document.getElementById('memoCharCount');
+
+        dailyMemoTextarea.addEventListener('input', (e) => {
+            const text = e.target.value;
+            const length = text.length;
+
+            // 文字数制限 (200文字)
+            if (length > 200) {
+                e.target.value = text.substring(0, 200);
+                return;
+            }
+
+            // 文字数表示更新
+            memoCharCount.textContent = length;
+
+            // 色分け
+            const charCountElement = memoCharCount.parentElement;
+            charCountElement.classList.remove('warning', 'error');
+
+            if (length >= 180) {
+                charCountElement.classList.add('error');
+            } else if (length >= 150) {
+                charCountElement.classList.add('warning');
+            }
+
+            // メモを保存
+            this.dailyMemo = text;
+            this.saveData();
+        });
+
+        // 一言メモの初期表示
+        this.updateMemoDisplay();
+
+        // 前日データの表示/非表示切り替え
+        document.getElementById('togglePreviousDay').addEventListener('click', () => {
+            this.togglePreviousDayDisplay();
+        });
+
+        // エクスポート関連のイベント
+        document.getElementById('exportHistory').addEventListener('click', () => {
+            this.showBottomSheet('exportSheet');
+        });
+
+        document.getElementById('closeExport').addEventListener('click', () => {
+            this.hideBottomSheet('exportSheet');
+        });
+
+        document.getElementById('exportJSON').addEventListener('click', () => {
+            this.exportData('json');
+            this.hideBottomSheet('exportSheet');
+        });
+
+        document.getElementById('exportCSV').addEventListener('click', () => {
+            this.exportData('csv');
+            this.hideBottomSheet('exportSheet');
+        });
+
+        document.getElementById('exportText').addEventListener('click', () => {
+            this.exportData('text');
+            this.hideBottomSheet('exportSheet');
+        });
+    }
+
+    addDrink(type, volume, alcoholPercent) {
+        const now = new Date();
+        const drink = {
+            id: now.getTime(),
+            type: type,
+            volume: volume,
+            alcoholPercent: alcoholPercent,
+            pureAlcohol: this.calculatePureAlcohol(volume, alcoholPercent),
+            timestamp: now
+        };
+
+        // 初回飲酒時刻を記録
+        if (this.drinks.length === 0) {
+            this.firstDrinkTime = now;
+        }
+
+        this.drinks.push(drink);
+
+        // セッション活動を更新
+        this.updateSessionActivity();
+
+        // 振動フィードバック
+        this.vibrate([50]);
+
+        this.saveData();
+        this.updateDisplay();
+        this.checkWarnings();
+        this.checkPaceWarning();
+    }
+
+    addCustomDrink() {
+        const volume = parseInt(document.getElementById('customVolume').value);
+        const alcoholPercent = parseFloat(document.getElementById('customAlcohol').value);
+
+        if (!volume || !alcoholPercent || volume <= 0 || alcoholPercent < 0) {
+            alert('正しい値を入力してください');
+            return;
+        }
+
+        this.addDrink('custom', volume, alcoholPercent);
+        this.hideBottomSheet('customForm');
+        this.clearCustomForm();
+    }
+
+    clearCustomForm() {
+        document.getElementById('customVolume').value = '';
+        document.getElementById('customAlcohol').value = '';
+    }
+
+    addWater(amount) {
+        const waterIntake = {
+            id: Date.now(),
+            amount: amount,
+            timestamp: new Date()
+        };
+
+        this.waterIntakes.push(waterIntake);
+
+        // セッション活動を更新
+        this.updateSessionActivity();
+
+        // 振動フィードバック（短い振動）
+        this.vibrate([30]);
+
+        this.saveData();
+        this.updateDisplay();
+    }
+
+    addCustomWater() {
+        const amount = parseInt(document.getElementById('customWaterAmount').value);
+
+        if (!amount || amount <= 0) {
+            alert('正しい水分量を入力してください');
+            return;
+        }
+
+        this.addWater(amount);
+        this.hideBottomSheet('customWaterForm');
+        this.clearCustomWaterForm();
+    }
+
+    addToiletVisit() {
+        const toiletVisit = {
+            id: Date.now(),
+            timestamp: new Date()
+        };
+
+        this.toiletVisits.push(toiletVisit);
+
+        // セッション活動を更新
+        this.updateSessionActivity();
+
+        // 振動フィードバック（短い振動）
+        this.vibrate([30]);
+
+        this.saveData();
+        this.updateDisplay();
+    }
+
+    clearCustomWaterForm() {
+        document.getElementById('customWaterAmount').value = '';
+    }
+
+    calculatePureAlcohol(volume, alcoholPercent) {
+        // 純アルコール量 = 飲酒量(ml) × アルコール度数(%) × 0.8（アルコールの比重）/ 100
+        return Math.round(volume * alcoholPercent * 0.8 / 100 * 10) / 10;
+    }
+
+    calculateBloodAlcoholContent() {
+        if (this.drinks.length === 0) return 0;
+
+        const totalAlcohol = this.getTotalAlcohol();
+
+        // Widmark公式による血中アルコール濃度計算
+        // BAC = (A / (W × r)) - (β × t)
+        // A: 摂取した純アルコール量 (g)
+        // W: 体重 (kg)
+        // r: 性別係数 (男性: 0.7, 女性: 0.6)
+        // β: アルコール代謝速度 (0.15%/時間)
+        // t: 飲酒開始からの経過時間 (時間)
+
+        const bodyFactor = this.gender === 'male' ? 0.7 : 0.6;
+        const now = new Date();
+        const drinkingStartTime = this.firstDrinkTime || this.drinks[0].timestamp;
+        const elapsedHours = (now - drinkingStartTime) / (1000 * 60 * 60);
+
+        // 初期BAC計算（Widmark公式）
+        // BAC(%) = (アルコール量(g) × 0.8) / (体重(kg) × 体水分率) × 100 / 1000
+        const initialBAC = (totalAlcohol * 0.8) / (this.bodyWeight * bodyFactor) / 10;
+
+        // 代謝による減少を考慮（0.15g/dL/時間 = 0.015%/時間）
+        const metabolizedBAC = 0.015 * elapsedHours;
+
+        // 最終BAC（負の値にならないように）
+        const finalBAC = Math.max(0, initialBAC - metabolizedBAC);
+
+        return Math.round(finalBAC * 100) / 100;
+    }
+
+    getTotalAlcohol() {
+        return this.drinks.reduce((total, drink) => total + drink.pureAlcohol, 0);
+    }
+
+    getBacStatus(bac) {
+        for (let level of this.bacLevels) {
+            if (bac >= level.min && bac < level.max) {
+                return level;
+            }
+        }
+        // デフォルト（危険レベル）
+        return this.bacLevels[this.bacLevels.length - 1];
+    }
+
+    getTotalWater() {
+        return this.waterIntakes.reduce((total, intake) => total + intake.amount, 0);
+    }
+
+    getRecommendedWaterIntake() {
+        const totalAlcohol = this.getTotalAlcohol();
+
+        // 基本的な水分補給ガイドライン：
+        // 1. アルコール1gにつき10-15mlの水分摂取を推奨
+        // 2. 最低でもアルコール飲料と同量の水分
+        // 3. 脱水防止のための追加水分
+
+        if (totalAlcohol === 0) return 0;
+
+        // アルコール量ベースの推奨量（12ml/g）
+        const alcoholBasedWater = totalAlcohol * 12;
+
+        // 飲料量ベースの推奨量（アルコール飲料総量と同量）
+        const totalDrinkVolume = this.drinks.reduce((total, drink) => total + drink.volume, 0);
+
+        // より高い方を採用し、最低300ml以上を確保
+        const recommended = Math.max(alcoholBasedWater, totalDrinkVolume, 300);
+
+        return Math.round(recommended);
+    }
+
+    getWaterAlcoholRatio() {
+        const totalWater = this.getTotalWater();
+        const totalAlcohol = this.getTotalAlcohol();
+
+        if (totalAlcohol === 0) return '-';
+
+        const ratio = totalWater / totalAlcohol;
+        return `${Math.round(ratio * 10) / 10}:1`;
+    }
+
+    getCurrentPace() {
+        if (this.drinks.length < 2) return '-';
+
+        const now = new Date();
+        const firstDrink = this.drinks[0].timestamp;
+        const timeDiff = (now - firstDrink) / (1000 * 60); // 分
+        const pace = timeDiff / this.drinks.length;
+
+        return `${Math.round(pace)}分/杯`;
+    }
+
+    calculateSoberTime() {
+        const currentBAC = this.calculateBloodAlcoholContent();
+        if (currentBAC === 0) return '0時間';
+
+        // BAC 0.05%を完全しらふとする閾値
+        const soberThreshold = 0.05;
+
+        if (currentBAC <= soberThreshold) return '0時間';
+
+        // 代謝速度による時間計算
+        const hoursToSober = (currentBAC - soberThreshold) / this.metabolismRate;
+
+        if (hoursToSober < 1) {
+            return `${Math.round(hoursToSober * 60)}分`;
+        } else {
+            const hours = Math.floor(hoursToSober);
+            const minutes = Math.round((hoursToSober - hours) * 60);
+            return minutes > 0 ? `${hours}時間${minutes}分` : `${hours}時間`;
+        }
+    }
+
+    updateDisplay() {
+        const totalAlcohol = this.getTotalAlcohol();
+        const bac = this.calculateBloodAlcoholContent();
+        const remaining = Math.max(0, this.dailyLimit - totalAlcohol);
+        const progressPercent = Math.min(100, (totalAlcohol / this.dailyLimit) * 100);
+        const totalWater = this.getTotalWater();
+        const waterAlcoholRatio = this.getWaterAlcoholRatio();
+        const toiletCount = this.toiletVisits.length;
+        const currentPace = this.getCurrentPace();
+        const soberTime = this.calculateSoberTime();
+
+        // 数値更新
+        document.getElementById('totalAlcohol').textContent = `${totalAlcohol}g`;
+        document.getElementById('bloodAlcohol').textContent = `${bac.toFixed(2)}%`;
+        document.getElementById('remainingLimit').textContent = `${remaining}g`;
+        document.getElementById('totalWater').textContent = `${totalWater}ml`;
+        document.getElementById('waterAlcoholRatio').textContent = waterAlcoholRatio;
+        document.getElementById('toiletCount').textContent = `${toiletCount}回`;
+        document.getElementById('currentPace').textContent = currentPace;
+        document.getElementById('soberTime').textContent = soberTime;
+
+        // 前回飲酒時間と経過時間の更新
+        this.updateLastDrinkInfo();
+
+        // セッション情報の更新
+        this.updateSessionInfo();
+
+        // 推奨水分量の表示と評価
+        const recommendedWater = this.getRecommendedWaterIntake();
+        const waterTarget = document.getElementById('waterTarget');
+
+        if (recommendedWater === 0) {
+            waterTarget.textContent = '推奨: 飲酒開始で表示';
+            waterTarget.className = 'info-target';
+        } else {
+            waterTarget.textContent = `推奨: ${recommendedWater}ml`;
+
+            // 摂取状況による色分け
+            if (totalWater >= recommendedWater) {
+                waterTarget.className = 'info-target sufficient';
+            } else if (totalWater >= recommendedWater * 0.7) {
+                waterTarget.className = 'info-target';
+            } else {
+                waterTarget.className = 'info-target insufficient';
+            }
+        }
+
+        // 血中アルコール濃度の状態表示更新
+        const bacStatus = this.getBacStatus(bac);
+        const bacIcon = document.getElementById('bacIcon');
+        const bacText = document.getElementById('bacText');
+
+        bacIcon.textContent = bacStatus.icon;
+        bacText.textContent = bacStatus.status;
+
+        // 既存のクラスを削除
+        bacText.className = 'status-text';
+        // 新しいクラスを追加
+        bacText.classList.add(bacStatus.className);
+
+        // プログレスバー更新
+        const progressFill = document.getElementById('progressFill');
+        progressFill.style.width = `${progressPercent}%`;
+
+        // プログレスバーの色変更
+        progressFill.classList.remove('warning', 'danger');
+        if (progressPercent >= 100) {
+            progressFill.classList.add('danger');
+        } else if (progressPercent >= 80) {
+            progressFill.classList.add('warning');
+        }
+
+        // 履歴更新
+        this.updateHistory();
+
+        // 設定値更新
+        document.getElementById('gender').value = this.gender;
+        document.getElementById('bodyWeight').value = this.bodyWeight;
+        document.getElementById('dailyLimit').value = this.dailyLimit;
+        document.getElementById('targetPace').value = this.targetPace;
+        document.getElementById('waterReminder').value = this.waterReminderInterval;
+        document.getElementById('vibrationEnabled').checked = this.vibrationEnabled;
+    }
+
+    updateHistory() {
+        const historyContainer = document.getElementById('drinkHistory');
+
+        // すべての記録を時系列で統合
+        const allRecords = [
+            ...this.drinks.map(drink => ({
+                ...drink,
+                originalType: drink.type,
+                type: 'drink',
+                timestamp: drink.timestamp
+            })),
+            ...this.waterIntakes.map(water => ({
+                ...water,
+                type: 'water',
+                timestamp: water.timestamp
+            })),
+            ...this.toiletVisits.map(toilet => ({
+                ...toilet,
+                type: 'toilet',
+                timestamp: toilet.timestamp
+            }))
+        ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        if (allRecords.length === 0) {
+            historyContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <div class="empty-text">まだ記録がありません</div>
+                </div>
+            `;
+            return;
+        }
+
+        const historyHTML = allRecords.map(record => {
+            const time = record.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            if (record.type === 'drink') {
+                const drinkName = this.getDrinkName(record.originalType || 'custom');
+                return `
+                    <div class="drink-item">
+                        <div class="drink-info">
+                            <div class="drink-name">${drinkName}</div>
+                            <div class="drink-details">
+                                ${record.volume}ml (${record.alcoholPercent}%) - ${time}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <div class="drink-alcohol">${record.pureAlcohol}g</div>
+                            <button class="delete-item-btn" data-type="drink" data-id="${record.id}">×</button>
+                        </div>
+                    </div>
+                `;
+            } else if (record.type === 'water') {
+                return `
+                    <div class="drink-item water-item">
+                        <div class="drink-info">
+                            <div class="drink-name">💧 水分摂取</div>
+                            <div class="drink-details">
+                                ${record.amount}ml - ${time}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <div class="drink-alcohol">+${record.amount}ml</div>
+                            <button class="delete-item-btn" data-type="water" data-id="${record.id}">×</button>
+                        </div>
+                    </div>
+                `;
+            } else if (record.type === 'toilet') {
+                return `
+                    <div class="drink-item toilet-item">
+                        <div class="drink-info">
+                            <div class="drink-name">🚽 トイレ</div>
+                            <div class="drink-details">
+                                ${time}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <div class="drink-alcohol">+1回</div>
+                            <button class="delete-item-btn" data-type="toilet" data-id="${record.id}">×</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }).join('');
+
+        historyContainer.innerHTML = historyHTML;
+    }
+
+    getDrinkName(type) {
+        const names = {
+            beer: '🍺 ビール(350ml)',
+            beer_large: '🍺 ビール(500ml)',
+            highball: '🥃 ハイボール',
+            sake: '🍶 日本酒',
+            wine: '🍷 ワイン',
+            sparkling_wine: '🥂 スパークリング',
+            whiskey: '🥃 ウイスキー',
+            shochu: '🍺 焼酎',
+            custom: '🍹 カスタム'
+        };
+        return names[type] || 'その他';
+    }
+
+    checkWarnings() {
+        const totalAlcohol = this.getTotalAlcohol();
+        const warningElement = document.getElementById('warningMessage');
+
+        if (totalAlcohol > this.dailyLimit) {
+            warningElement.style.display = 'block';
+            this.showNotification('適正飲酒量を超えました！', 'warning');
+        } else {
+            warningElement.style.display = 'none';
+        }
+
+        // 血中アルコール濃度による警告
+        const bac = this.calculateBloodAlcoholContent();
+        if (bac >= 0.15) {
+            this.showNotification('血中アルコール濃度が高くなっています！', 'danger');
+        }
+    }
+
+    checkPaceWarning() {
+        if (this.drinks.length < 2) return;
+
+        const now = new Date();
+        const lastDrink = this.drinks[this.drinks.length - 1].timestamp;
+        const secondLastDrink = this.drinks[this.drinks.length - 2].timestamp;
+
+        // 直近2杯の間隔を計算
+        const timeDiff = (lastDrink - secondLastDrink) / (1000 * 60); // 分
+
+        if (timeDiff < this.targetPace * 0.7) {
+            this.showNotification(`ペースが早すぎます！目標：${this.targetPace}分/杯`, 'warning');
+        }
+
+        // 全体的なペースも確認
+        if (this.drinks.length >= 3) {
+            const firstDrink = this.drinks[0].timestamp;
+            const totalTime = (now - firstDrink) / (1000 * 60); // 分
+            const avgPace = totalTime / this.drinks.length;
+
+            if (avgPace < this.targetPace * 0.8) {
+                this.showNotification('全体的にペースが早めです。水分補給を忘れずに！', 'warning');
+            }
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        // 簡易的な通知表示
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'warning' ? '#FF9800' : type === 'danger' ? '#F44336' : '#2196F3'};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    startWaterReminder() {
+        this.stopWaterReminder();
+        this.waterReminderTimer = setInterval(() => {
+            this.showNotification('💧 水分補給の時間です！', 'info');
+        }, this.waterReminderInterval * 60 * 1000);
+    }
+
+    stopWaterReminder() {
+        if (this.waterReminderTimer) {
+            clearInterval(this.waterReminderTimer);
+            this.waterReminderTimer = null;
+        }
+    }
+
+    restartWaterReminder() {
+        this.startWaterReminder();
+    }
+
+    deleteRecord(type, id) {
+        const numericId = parseInt(id);
+        let deleted = false;
+
+        if (type === 'drink') {
+            const index = this.drinks.findIndex(drink => drink.id === numericId);
+            if (index > -1) {
+                this.drinks.splice(index, 1);
+                deleted = true;
+            }
+        } else if (type === 'water') {
+            const index = this.waterIntakes.findIndex(water => water.id === numericId);
+            if (index > -1) {
+                this.waterIntakes.splice(index, 1);
+                deleted = true;
+            }
+        } else if (type === 'toilet') {
+            const index = this.toiletVisits.findIndex(toilet => toilet.id === numericId);
+            if (index > -1) {
+                this.toiletVisits.splice(index, 1);
+                deleted = true;
+            }
+        }
+
+        if (deleted) {
+            // 初回飲酒時刻のリセット（飲み物がすべて削除された場合）
+            if (this.drinks.length === 0) {
+                this.firstDrinkTime = null;
+            }
+
+            // 振動フィードバック（短い振動）
+            this.vibrate([20]);
+
+            this.saveData();
+            this.updateDisplay();
+        }
+    }
+
+    clearHistory() {
+        this.drinks = [];
+        this.waterIntakes = [];
+        this.toiletVisits = [];
+        this.firstDrinkTime = null;
+        this.saveData();
+        this.updateDisplay();
+    }
+
+    // セッション管理
+    checkAndResumeSession() {
+        const sessionData = localStorage.getItem('drinkingSession');
+        if (!sessionData) return;
+
+        const session = JSON.parse(sessionData);
+        const now = new Date();
+        const lastActivity = new Date(session.lastActivity);
+        const timeSinceLastActivity = now - lastActivity;
+
+        // 4時間以内の活動であればセッション継続
+        if (timeSinceLastActivity < this.sessionTimeout) {
+            this.currentSession = session;
+            console.log('セッション継続中:', session);
+        } else {
+            // セッション終了
+            this.endSession();
+        }
+    }
+
+    startNewSession() {
+        const now = new Date();
+        this.currentSession = {
+            id: 'session_' + now.getTime(),
+            startTime: now,
+            lastActivity: now,
+            startDate: now.toDateString()
+        };
+        this.saveSession();
+        console.log('新しいセッション開始:', this.currentSession);
+    }
+
+    updateSessionActivity() {
+        if (!this.currentSession) {
+            this.startNewSession();
+        } else {
+            this.currentSession.lastActivity = new Date();
+            this.saveSession();
+        }
+    }
+
+    endSession() {
+        if (this.currentSession) {
+            // セッションの終了データを保存する場合はここで処理
+            console.log('セッション終了:', this.currentSession);
+            this.currentSession = null;
+            localStorage.removeItem('drinkingSession');
+            this.updateDisplay();
+        }
+    }
+
+    endSessionWithConfirmation() {
+        if (!this.currentSession) return;
+
+        const duration = new Date() - new Date(this.currentSession.startTime);
+        const hours = Math.floor(duration / (1000 * 60 * 60));
+        const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+
+        let durationText = '';
+        if (hours > 0) {
+            durationText = `${hours}時間${minutes}分`;
+        } else {
+            durationText = `${minutes}分`;
+        }
+
+        const confirmed = confirm(`飲酒セッションを終了しますか？\n継続時間: ${durationText}\n\n注意: セッション終了後は血中アルコール濃度の継続計算も停止されます。`);
+
+        if (confirmed) {
+            this.endSession();
+            alert('セッションを終了しました。お疲れ様でした！');
+        }
+    }
+
+    saveSession() {
+        if (this.currentSession) {
+            localStorage.setItem('drinkingSession', JSON.stringify(this.currentSession));
+        }
+    }
+
+    checkDateChange() {
+        // セッション管理に変更：単純な日付変更ではリセットしない
+        const lastDate = localStorage.getItem('drinkingApp_lastDate');
+        const today = new Date().toDateString();
+
+        if (lastDate && lastDate !== today) {
+            // セッションが継続中でなければクリア
+            if (!this.currentSession) {
+                this.clearHistory();
+            }
+        }
+
+        localStorage.setItem('drinkingApp_lastDate', today);
+    }
+
+    updateSessionInfo() {
+        const sessionInfo = document.getElementById('sessionInfo');
+        const sessionStartTime = document.getElementById('sessionStartTime');
+        const sessionDuration = document.getElementById('sessionDuration');
+
+        if (!this.currentSession) {
+            sessionInfo.style.display = 'none';
+            return;
+        }
+
+        sessionInfo.style.display = 'block';
+
+        // セッション開始時刻の表示
+        const startTime = new Date(this.currentSession.startTime);
+        sessionStartTime.textContent = startTime.toLocaleTimeString('ja-JP', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        // セッション継続時間の表示
+        const now = new Date();
+        const duration = now - startTime;
+        const hours = Math.floor(duration / (1000 * 60 * 60));
+        const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+
+        let durationText = '';
+        if (hours > 0) {
+            durationText = `継続 ${hours}時間${minutes}分`;
+        } else {
+            durationText = `継続 ${minutes}分`;
+        }
+        sessionDuration.textContent = durationText;
+    }
+
+    saveData() {
+        const data = {
+            drinks: this.drinks.map(drink => ({
+                ...drink,
+                timestamp: drink.timestamp.toISOString()
+            })),
+            waterIntakes: this.waterIntakes.map(water => ({
+                ...water,
+                timestamp: water.timestamp.toISOString()
+            })),
+            toiletVisits: this.toiletVisits.map(toilet => ({
+                ...toilet,
+                timestamp: toilet.timestamp.toISOString()
+            })),
+            dailyMemo: this.dailyMemo,
+            date: new Date().toDateString()
+        };
+        localStorage.setItem('drinkingApp_data', JSON.stringify(data));
+    }
+
+    loadData() {
+        const data = localStorage.getItem('drinkingApp_data');
+        if (data) {
+            try {
+                const parsed = JSON.parse(data);
+                const today = new Date().toDateString();
+
+                if (parsed.date === today) {
+                    if (parsed.drinks) {
+                        this.drinks = parsed.drinks.map(drink => ({
+                            ...drink,
+                            timestamp: new Date(drink.timestamp)
+                        }));
+                    }
+                    if (parsed.waterIntakes) {
+                        this.waterIntakes = parsed.waterIntakes.map(water => ({
+                            ...water,
+                            timestamp: new Date(water.timestamp)
+                        }));
+                    }
+                    if (parsed.toiletVisits) {
+                        this.toiletVisits = parsed.toiletVisits.map(toilet => ({
+                            ...toilet,
+                            timestamp: new Date(toilet.timestamp)
+                        }));
+                    }
+                    if (parsed.dailyMemo) {
+                        this.dailyMemo = parsed.dailyMemo;
+                    }
+                } else if (parsed.date) {
+                    // 日付が異なる場合、前日のデータとして保存
+                    this.savePreviousDayData(parsed);
+                }
+            } catch (e) {
+                console.error('データの読み込みに失敗しました:', e);
+            }
+        }
+    }
+
+    saveSettings() {
+        const settings = {
+            gender: this.gender,
+            bodyWeight: this.bodyWeight,
+            dailyLimit: this.dailyLimit,
+            targetPace: this.targetPace,
+            waterReminderInterval: this.waterReminderInterval,
+            vibrationEnabled: this.vibrationEnabled
+        };
+        localStorage.setItem('drinkingApp_settings', JSON.stringify(settings));
+    }
+
+    loadSettings() {
+        const settings = localStorage.getItem('drinkingApp_settings');
+        if (settings) {
+            try {
+                const parsed = JSON.parse(settings);
+                this.gender = parsed.gender || 'male';
+                this.bodyWeight = parsed.bodyWeight || 77;
+                this.dailyLimit = parsed.dailyLimit || 20;
+                this.targetPace = parsed.targetPace || 30;
+                this.waterReminderInterval = parsed.waterReminderInterval || 20;
+                this.vibrationEnabled = parsed.vibrationEnabled !== undefined ? parsed.vibrationEnabled : true;
+            } catch (e) {
+                console.error('設定の読み込みに失敗しました:', e);
+            }
+        }
+    }
+
+    toggleFavorite(drinkType) {
+        const index = this.favoriteDrinks.indexOf(drinkType);
+        if (index > -1) {
+            this.favoriteDrinks.splice(index, 1);
+            // お気に入り削除時の振動（短い1回）
+            this.vibrate([20]);
+        } else {
+            this.favoriteDrinks.push(drinkType);
+            // お気に入り追加時の振動（2回パターン）
+            this.vibrate([30, 50, 30]);
+        }
+        this.saveFavorites();
+        this.generateDrinkCards();
+        this.updateFavoriteDrinksDisplay();
+    }
+
+    saveFavorites() {
+        localStorage.setItem('drinkingApp_favorites', JSON.stringify(this.favoriteDrinks));
+    }
+
+    loadFavorites() {
+        const favorites = localStorage.getItem('drinkingApp_favorites');
+        if (favorites) {
+            try {
+                this.favoriteDrinks = JSON.parse(favorites);
+            } catch (e) {
+                console.error('お気に入りの読み込みに失敗しました:', e);
+                this.favoriteDrinks = [];
+            }
+        }
+    }
+
+    async vibrate(pattern) {
+        // 振動設定が無効の場合は何もしない
+        if (!this.vibrationEnabled) {
+            return;
+        }
+
+        // HapticsServiceを使用（Web/ネイティブ両対応）
+        if (typeof hapticsService !== 'undefined') {
+            try {
+                await hapticsService.vibrate(pattern);
+                console.log('Haptics実行成功');
+            } catch (error) {
+                console.error('Haptics実行エラー:', error);
+            }
+        } else if ('vibrate' in navigator) {
+            // フォールバック: Web Vibration API
+            try {
+                const result = navigator.vibrate(pattern);
+                console.log('振動API実行:', result ? '成功' : '失敗');
+
+                if (!result) {
+                    this.showVibrationFallback();
+                }
+            } catch (error) {
+                console.log('振動API エラー:', error);
+                this.showVibrationFallback();
+            }
+        } else {
+            console.log('振動API 非対応ブラウザ');
+            this.showVibrationFallback();
+        }
+    }
+
+    showVibrationFallback() {
+        // 振動の代替フィードバック（視覚的効果）
+        const body = document.body;
+        body.style.transition = 'transform 0.1s ease';
+        body.style.transform = 'scale(1.005)';
+
+        setTimeout(() => {
+            body.style.transform = 'scale(1)';
+            setTimeout(() => {
+                body.style.transition = '';
+            }, 100);
+        }, 100);
+    }
+
+    updateFavoriteDrinksDisplay() {
+        const quickFavoritesGrid = document.getElementById('quickFavoritesGrid');
+        const quickFavorites = document.getElementById('quickFavorites');
+
+        if (this.favoriteDrinks.length === 0) {
+            quickFavorites.classList.remove('show');
+            return;
+        }
+
+        quickFavorites.classList.add('show');
+
+        const favoriteHTML = this.favoriteDrinks.slice(0, 5).map(drinkType => {
+            const drink = this.drinkTypes.find(d => d.type === drinkType);
+            if (!drink) return '';
+
+            return `
+                <button class="quick-favorite-btn" data-type="${drink.type}" data-alcohol="${drink.alcohol}" data-volume="${drink.volume}">
+                    <div class="quick-favorite-icon">${drink.emoji}</div>
+                    <div class="quick-favorite-name">${drink.name}</div>
+                    <div class="quick-favorite-detail">${drink.volume}ml</div>
+                </button>
+            `;
+        }).join('');
+
+        quickFavoritesGrid.innerHTML = favoriteHTML;
+    }
+
+    updateLastDrinkInfo() {
+        const lastDrinkTimeElement = document.getElementById('lastDrinkTime');
+        const timeSinceLastDrinkElement = document.getElementById('timeSinceLastDrink');
+        const lastDrinkInfoElement = document.getElementById('lastDrinkInfo');
+
+        if (this.drinks.length === 0) {
+            // 飲酒記録がない場合は非表示
+            lastDrinkInfoElement.style.display = 'none';
+            return;
+        }
+
+        // 飲酒記録がある場合は表示
+        lastDrinkInfoElement.style.display = 'flex';
+
+        // 最後の飲酒記録を取得
+        const lastDrink = this.drinks[this.drinks.length - 1];
+        const lastDrinkTime = new Date(lastDrink.timestamp);
+        const now = new Date();
+
+        // 前回飲酒時間を表示
+        const timeStr = lastDrinkTime.toLocaleTimeString('ja-JP', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        lastDrinkTimeElement.textContent = timeStr;
+
+        // 経過時間を計算
+        const timeDiff = now - lastDrinkTime;
+        const elapsedTimeStr = this.formatElapsedTime(timeDiff);
+        timeSinceLastDrinkElement.textContent = elapsedTimeStr;
+    }
+
+    formatElapsedTime(milliseconds) {
+        const seconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        if (hours > 0) {
+            const remainingMinutes = minutes % 60;
+            return `${hours}時間${remainingMinutes}分`;
+        } else if (minutes > 0) {
+            return `${minutes}分`;
+        } else {
+            return `${seconds}秒`;
+        }
+    }
+
+    startLastDrinkUpdateTimer() {
+        // 30秒ごとに前回飲酒からの経過時間を更新
+        setInterval(() => {
+            if (this.drinks.length > 0) {
+                this.updateLastDrinkInfo();
+            }
+        }, 30000); // 30秒間隔
+    }
+
+    hideAllBottomSheets() {
+        // すべてのボトムシートを閉じる
+        const bottomSheets = document.querySelectorAll('.bottom-sheet');
+        const overlay = document.getElementById('overlay');
+
+        bottomSheets.forEach(sheet => {
+            sheet.classList.remove('active');
+        });
+        overlay.classList.remove('active');
+
+        // bodyのスクロールを復活
+        document.body.style.overflow = '';
+    }
+
+    setupSwipeToClose() {
+        let startY = 0;
+        let startTime = 0;
+
+        // 設定画面でのスワイプイベント
+        const settingsSheet = document.getElementById('settingsSheet');
+
+        settingsSheet.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }, { passive: true });
+
+        settingsSheet.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            const endTime = Date.now();
+            const deltaY = endY - startY;
+            const deltaTime = endTime - startTime;
+
+            // 下向きスワイプで十分な距離と速度があれば閉じる
+            if (deltaY > 100 && deltaTime < 300) {
+                this.hideBottomSheet('settingsSheet');
+            }
+        }, { passive: true });
+
+        // カスタムフォームでも同様の処理
+        const customForm = document.getElementById('customForm');
+
+        customForm.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }, { passive: true });
+
+        customForm.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            const endTime = Date.now();
+            const deltaY = endY - startY;
+            const deltaTime = endTime - startTime;
+
+            if (deltaY > 100 && deltaTime < 300) {
+                this.hideBottomSheet('customForm');
+            }
+        }, { passive: true });
+
+        // カスタム水分フォームでも同様の処理
+        const customWaterForm = document.getElementById('customWaterForm');
+
+        customWaterForm.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }, { passive: true });
+
+        customWaterForm.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            const endTime = Date.now();
+            const deltaY = endY - startY;
+            const deltaTime = endTime - startTime;
+
+            if (deltaY > 100 && deltaTime < 300) {
+                this.hideBottomSheet('customWaterForm');
+            }
+        }, { passive: true });
+    }
+
+    updateMemoDisplay() {
+        const dailyMemoTextarea = document.getElementById('dailyMemo');
+        const memoCharCount = document.getElementById('memoCharCount');
+
+        if (dailyMemoTextarea) {
+            dailyMemoTextarea.value = this.dailyMemo;
+            const length = this.dailyMemo.length;
+            memoCharCount.textContent = length;
+
+            // 文字数に応じた色分け
+            const charCountElement = memoCharCount.parentElement;
+            charCountElement.classList.remove('warning', 'error');
+
+            if (length >= 180) {
+                charCountElement.classList.add('error');
+            } else if (length >= 150) {
+                charCountElement.classList.add('warning');
+            }
+        }
+    }
+
+    exportData(format) {
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('ja-JP');
+        const fileName = `DrinkSmart_${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+
+        let content = '';
+        let mimeType = '';
+        let extension = '';
+
+        switch (format) {
+            case 'json':
+                content = this.generateJSONExport();
+                mimeType = 'application/json';
+                extension = 'json';
+                break;
+            case 'csv':
+                content = this.generateCSVExport();
+                mimeType = 'text/csv';
+                extension = 'csv';
+                break;
+            case 'text':
+                content = this.generateTextExport();
+                mimeType = 'text/plain';
+                extension = 'txt';
+                break;
+            default:
+                return;
+        }
+
+        // ファイルダウンロード
+        const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}.${extension}`;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        // 振動フィードバック
+        this.vibrate([100]);
+    }
+
+    generateJSONExport() {
+        const exportData = {
+            exportDate: new Date().toISOString(),
+            appVersion: '1.6.0',
+            date: new Date().toDateString(),
+            dailyMemo: this.dailyMemo,
+            summary: {
+                totalAlcohol: this.getTotalAlcohol(),
+                bloodAlcoholContent: this.calculateBloodAlcoholContent(),
+                totalWater: this.getTotalWater(),
+                toiletVisits: this.toiletVisits.length,
+                drinksCount: this.drinks.length
+            },
+            drinks: this.drinks.map(drink => ({
+                ...drink,
+                timestamp: drink.timestamp.toISOString(),
+                drinkName: this.getDrinkName(drink.type)
+            })),
+            waterIntakes: this.waterIntakes.map(water => ({
+                ...water,
+                timestamp: water.timestamp.toISOString()
+            })),
+            toiletVisits: this.toiletVisits.map(toilet => ({
+                ...toilet,
+                timestamp: toilet.timestamp.toISOString()
+            }))
+        };
+        return JSON.stringify(exportData, null, 2);
+    }
+
+    generateCSVExport() {
+        const lines = ['日時,種別,内容,量,アルコール度数,純アルコール量'];
+
+        // 飲み物記録
+        this.drinks.forEach(drink => {
+            const time = drink.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const name = this.getDrinkName(drink.type);
+            lines.push(`${time},飲み物,${name},${drink.volume}ml,${drink.alcoholPercent}%,${drink.pureAlcohol}g`);
+        });
+
+        // 水分摂取記録
+        this.waterIntakes.forEach(water => {
+            const time = water.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            lines.push(`${time},水分,水分摂取,${water.amount}ml,0%,0g`);
+        });
+
+        // トイレ記録
+        this.toiletVisits.forEach(toilet => {
+            const time = toilet.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            lines.push(`${time},トイレ,トイレ訪問,-,-,-`);
+        });
+
+        // 一言メモ
+        if (this.dailyMemo.trim()) {
+            lines.push(`-,メモ,"${this.dailyMemo.replace(/"/g, '""')}",-,-,-`);
+        }
+
+        return lines.join('\n');
+    }
+
+    generateTextExport() {
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        let report = `=== Drink Smart レポート ===\n`;
+        report += `日付: ${dateStr}\n`;
+        report += `エクスポート日時: ${today.toLocaleString('ja-JP')}\n\n`;
+
+        // サマリー
+        report += `--- 今日のサマリー ---\n`;
+        report += `純アルコール量: ${this.getTotalAlcohol()}g\n`;
+        report += `血中アルコール濃度: ${this.calculateBloodAlcoholContent().toFixed(2)}%\n`;
+        report += `水分摂取量: ${this.getTotalWater()}ml\n`;
+        report += `トイレ回数: ${this.toiletVisits.length}回\n`;
+        report += `飲み物記録数: ${this.drinks.length}杯\n\n`;
+
+        // 一言メモ
+        if (this.dailyMemo.trim()) {
+            report += `--- 今日の一言 ---\n`;
+            report += `${this.dailyMemo}\n\n`;
+        }
+
+        // 詳細記録
+        report += `--- 詳細記録 ---\n`;
+
+        // すべての記録を時系列順に統合
+        const allRecords = [
+            ...this.drinks.map(drink => ({
+                ...drink,
+                type: 'drink',
+                displayName: this.getDrinkName(drink.originalType || drink.type)
+            })),
+            ...this.waterIntakes.map(water => ({
+                ...water,
+                type: 'water',
+                displayName: '水分摂取'
+            })),
+            ...this.toiletVisits.map(toilet => ({
+                ...toilet,
+                type: 'toilet',
+                displayName: 'トイレ'
+            }))
+        ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        allRecords.forEach((record, index) => {
+            const time = record.timestamp.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            switch (record.type) {
+                case 'drink':
+                    report += `${index + 1}. ${time} - ${record.displayName} (${record.volume}ml, ${record.alcoholPercent}%, 純アルコール${record.pureAlcohol}g)\n`;
+                    break;
+                case 'water':
+                    report += `${index + 1}. ${time} - ${record.displayName} (${record.amount}ml)\n`;
+                    break;
+                case 'toilet':
+                    report += `${index + 1}. ${time} - ${record.displayName}\n`;
+                    break;
+            }
+        });
+
+        if (allRecords.length === 0) {
+            report += `記録はありません。\n`;
+        }
+
+        report += `\n--- レポート終了 ---\n`;
+        report += `Generated by Drink Smart v1.6.0\n`;
+
+        return report;
+    }
+
+    getDrinkName(type) {
+        const drinkType = this.drinkTypes.find(d => d.type === type);
+        return drinkType ? drinkType.name : type;
+    }
+
+    savePreviousDayData(data) {
+        // 前日のデータとして保存（最大7日間保持）
+        try {
+            const previousDays = this.getPreviousDaysData();
+
+            // 新しいデータを先頭に追加
+            previousDays.unshift(data);
+
+            // 最大7日間のデータのみ保持
+            const limitedData = previousDays.slice(0, 7);
+
+            localStorage.setItem('drinkingApp_previousDays', JSON.stringify(limitedData));
+        } catch (e) {
+            console.error('前日データの保存に失敗しました:', e);
+        }
+    }
+
+    getPreviousDaysData() {
+        try {
+            const data = localStorage.getItem('drinkingApp_previousDays');
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error('前日データの読み込みに失敗しました:', e);
+            return [];
+        }
+    }
+
+    getPreviousDayData(daysAgo = 1) {
+        const previousDays = this.getPreviousDaysData();
+        if (previousDays.length >= daysAgo) {
+            return previousDays[daysAgo - 1];
+        }
+        return null;
+    }
+
+    formatPreviousDayData(data) {
+        if (!data) return null;
+
+        const date = new Date(data.date);
+        const drinks = data.drinks || [];
+        const waterIntakes = data.waterIntakes || [];
+        const toiletVisits = data.toiletVisits || [];
+
+        // 統計計算
+        const totalAlcohol = drinks.reduce((sum, drink) => sum + (drink.pureAlcohol || 0), 0);
+        const totalWater = waterIntakes.reduce((sum, water) => sum + (water.amount || 0), 0);
+
+        return {
+            date: date.toLocaleDateString('ja-JP', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short'
+            }),
+            rawDate: data.date,
+            dailyMemo: data.dailyMemo || '',
+            totalAlcohol,
+            totalWater,
+            drinksCount: drinks.length,
+            toiletCount: toiletVisits.length,
+            drinks: drinks.map(drink => ({
+                ...drink,
+                timestamp: new Date(drink.timestamp),
+                drinkName: this.getDrinkName(drink.type)
+            })),
+            waterIntakes: waterIntakes.map(water => ({
+                ...water,
+                timestamp: new Date(water.timestamp)
+            })),
+            toiletVisits: toiletVisits.map(toilet => ({
+                ...toilet,
+                timestamp: new Date(toilet.timestamp)
+            }))
+        };
+    }
+
+    updatePreviousDaySection() {
+        const previousDayData = this.getPreviousDayData(1);
+        const section = document.getElementById('previousDaySection');
+
+        if (previousDayData) {
+            const formattedData = this.formatPreviousDayData(previousDayData);
+            section.style.display = 'block';
+            this.updatePreviousDayDisplay(formattedData);
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    togglePreviousDayDisplay() {
+        const content = document.getElementById('previousDayContent');
+        const toggleBtn = document.getElementById('togglePreviousDay');
+
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            toggleBtn.textContent = '非表示';
+        } else {
+            content.style.display = 'none';
+            toggleBtn.textContent = '表示';
+        }
+
+        // 振動フィードバック
+        this.vibrate([30]);
+    }
+
+    updatePreviousDayDisplay(data) {
+        if (!data) return;
+
+        const summary = document.getElementById('previousDaySummary');
+
+        // タイムライン用のデータを統合・ソート
+        const timeline = [
+            ...data.drinks.map(drink => ({
+                time: drink.timestamp,
+                type: 'drink',
+                content: `${drink.drinkName} (${drink.volume}ml, ${drink.alcoholPercent}%, 純アルコール${drink.pureAlcohol}g)`
+            })),
+            ...data.waterIntakes.map(water => ({
+                time: water.timestamp,
+                type: 'water',
+                content: `水分摂取 (${water.amount}ml)`
+            })),
+            ...data.toiletVisits.map(toilet => ({
+                time: toilet.timestamp,
+                type: 'toilet',
+                content: 'トイレ'
+            }))
+        ].sort((a, b) => a.time - b.time);
+
+        summary.innerHTML = `
+            <div style="text-align: center; margin-bottom: 16px; font-weight: 600; color: #ff9500;">
+                ${data.date}
+            </div>
+
+            <div class="previous-day-stats">
+                <div class="previous-day-stat">
+                    <div class="previous-day-stat-value">${data.totalAlcohol}g</div>
+                    <div class="previous-day-stat-label">純アルコール</div>
+                </div>
+                <div class="previous-day-stat">
+                    <div class="previous-day-stat-value">${data.drinksCount}杯</div>
+                    <div class="previous-day-stat-label">飲み物</div>
+                </div>
+                <div class="previous-day-stat">
+                    <div class="previous-day-stat-value">${data.totalWater}ml</div>
+                    <div class="previous-day-stat-label">水分</div>
+                </div>
+                <div class="previous-day-stat">
+                    <div class="previous-day-stat-value">${data.toiletCount}回</div>
+                    <div class="previous-day-stat-label">トイレ</div>
+                </div>
+            </div>
+
+            ${data.dailyMemo ? `
+                <div class="previous-day-memo">
+                    <div class="previous-day-memo-title">その日の一言</div>
+                    <div class="previous-day-memo-content">${data.dailyMemo}</div>
+                </div>
+            ` : `
+                <div class="previous-day-memo">
+                    <div class="previous-day-memo-content previous-day-memo-empty">メモは記録されていません</div>
+                </div>
+            `}
+
+            ${timeline.length > 0 ? `
+                <div class="previous-day-timeline">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #333;">詳細タイムライン</div>
+                    ${timeline.map(item => `
+                        <div class="previous-day-timeline-item">
+                            <div class="previous-day-timeline-time">
+                                ${item.time.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <div class="previous-day-timeline-content">${item.content}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
+        `;
+    }
+
+    // 記録忘れリマインダー関連メソッド
+    initReminderEvents() {
+        // リマインダーの「了解」ボタンイベント
+        const dismissBtn = document.getElementById('dismissReminder');
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                this.hideRecordReminder();
+            });
+        }
+
+        // セッション終了ボタンイベント
+        const endSessionBtn = document.getElementById('endSessionBtn');
+        if (endSessionBtn) {
+            endSessionBtn.addEventListener('click', () => {
+                this.endSessionWithConfirmation();
+            });
+        }
+    }
+
+    checkRecordReminder() {
+        const recordReminderMinutes = parseInt(localStorage.getItem('recordReminder') || '45');
+        const notificationEnabled = localStorage.getItem('notificationEnabled') === 'true';
+
+        if (!notificationEnabled || recordReminderMinutes <= 0) {
+            return;
+        }
+
+        const now = new Date();
+        const lastActivity = this.getLastActivity();
+
+        if (!lastActivity) {
+            return;
+        }
+
+        const timeSinceLastActivity = now - lastActivity;
+        const reminderThreshold = recordReminderMinutes * 60 * 1000; // ミリ秒に変換
+
+        if (timeSinceLastActivity > reminderThreshold) {
+            this.showRecordReminder(timeSinceLastActivity);
+        }
+    }
+
+    getLastActivity() {
+        const drinkHistory = JSON.parse(localStorage.getItem('drinkHistory') || '[]');
+        const waterHistory = JSON.parse(localStorage.getItem('waterIntakes') || '[]');
+        const toiletHistory = JSON.parse(localStorage.getItem('toiletVisits') || '[]');
+
+        const allActivities = [
+            ...drinkHistory.map(d => new Date(d.timestamp)),
+            ...waterHistory.map(w => new Date(w.timestamp)),
+            ...toiletHistory.map(t => new Date(t.timestamp))
+        ];
+
+        if (allActivities.length === 0) {
+            return null;
+        }
+
+        return Math.max(...allActivities);
+    }
+
+    showRecordReminder(timeSinceLastActivity) {
+        const card = document.getElementById('recordReminderCard');
+        const text = document.getElementById('recordReminderText');
+
+        if (!card || !text) return;
+
+        const hours = Math.floor(timeSinceLastActivity / (1000 * 60 * 60));
+        const minutes = Math.floor((timeSinceLastActivity % (1000 * 60 * 60)) / (1000 * 60));
+
+        let timeText = '';
+        if (hours > 0) {
+            timeText = `${hours}時間${minutes}分`;
+        } else {
+            timeText = `${minutes}分`;
+        }
+
+        text.textContent = `最後の記録から${timeText}経過しています`;
+        card.style.display = 'block';
+
+        // 振動フィードバック
+        const vibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
+        if (vibrationEnabled) {
+            this.vibrate([100, 50, 100]);
+        }
+    }
+
+    hideRecordReminder() {
+        const card = document.getElementById('recordReminderCard');
+        if (card) {
+            card.style.display = 'none';
+        }
+    }
+
+    startReminderTimer() {
+        // 5分ごとにリマインダーをチェック
+        setInterval(() => {
+            this.checkRecordReminder();
+        }, 5 * 60 * 1000);
+    }
+
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                console.log('Notification permission:', permission);
+            });
+        }
+    }
+}
+
+// CSS for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// アプリ初期化
+document.addEventListener('DOMContentLoaded', () => {
+    new DrinkingApp();
+});

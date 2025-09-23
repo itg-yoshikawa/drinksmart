@@ -1,0 +1,1896 @@
+/* リセットCSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #f5f5f7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
+}
+
+/* アプリヘッダー */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e5e7;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: env(safe-area-inset-top) 0 0 0;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    height: 56px;
+}
+
+.app-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.app-icon {
+    font-size: 20px;
+}
+
+.app-version {
+    font-size: 10px;
+    font-weight: 500;
+    color: #8e8e93;
+    background: #f2f2f7;
+    padding: 2px 6px;
+    border-radius: 8px;
+    margin-left: 4px;
+}
+
+.header-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    border: none;
+    background: #f2f2f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.header-btn:hover {
+    background: #e5e5ea;
+    transform: scale(1.05);
+}
+
+.header-btn:active {
+    transform: scale(0.95);
+}
+
+.date-badge {
+    background: #007AFF;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0 20px 8px 20px;
+    text-align: center;
+}
+
+/* メインコンテンツ */
+.app-main {
+    padding-top: calc(env(safe-area-inset-top) + 90px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+    min-height: 100vh;
+}
+
+/* タブナビゲーション */
+.tab-nav {
+    display: flex;
+    background: #ffffff;
+    border-radius: 16px;
+    margin: 0 16px 20px 16px;
+    padding: 4px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* お気に入りクイックアクセス */
+.quick-favorites {
+    margin: 0 16px 20px;
+    display: none; /* デフォルトで非表示 */
+}
+
+.quick-favorites.show {
+    display: block;
+}
+
+.quick-favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.quick-favorite-btn {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 2px solid transparent;
+}
+
+.quick-favorite-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-color: #007AFF;
+}
+
+.quick-favorite-btn:active {
+    transform: scale(0.98);
+}
+
+.quick-favorite-icon {
+    font-size: 24px;
+    margin-bottom: 2px;
+}
+
+.quick-favorite-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.quick-favorite-detail {
+    font-size: 8px;
+    color: #8e8e93;
+    text-align: center;
+}
+
+.tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tab-btn.active {
+    background: #007AFF;
+    color: white;
+    transform: scale(1.02);
+}
+
+.tab-btn.active .tab-icon {
+    transform: scale(1.1);
+}
+
+.tab-icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.tab-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* タブコンテンツ */
+.tab-content {
+    display: none;
+    padding: 0 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ステータス概要 */
+.status-overview {
+    margin-bottom: 24px;
+}
+
+.primary-stats {
+    margin-bottom: 16px;
+}
+
+.main-stat {
+    background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3);
+}
+
+.stat-value {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 16px;
+}
+
+.stat-progress {
+    margin-top: 16px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+.secondary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.stat-card {
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.stat-card .stat-label {
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+.stat-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.status-icon {
+    font-size: 14px;
+}
+
+.status-text {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #f2f2f7;
+}
+
+.status-text.normal { background: #d1f2eb; color: #27ae60; }
+.status-text.mild { background: #fcf3cd; color: #f39c12; }
+.status-text.tipsy { background: #fde2e4; color: #e67e22; }
+.status-text.drunk { background: #fadbd8; color: #e74c3c; }
+.status-text.very-drunk { background: #f5b7b1; color: #c0392b; }
+.status-text.dangerous { background: #ec7063; color: #922b21; }
+
+/* 前回飲酒情報 */
+.last-drink-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(142, 142, 147, 0.1);
+    border-radius: 12px;
+    padding: 8px 16px;
+    margin: 16px 0;
+    font-size: 13px;
+}
+
+.last-drink-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.last-drink-label {
+    color: #8e8e93;
+    font-weight: 500;
+}
+
+.last-drink-value {
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+.last-drink-elapsed {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.elapsed-value {
+    color: #007AFF;
+    font-weight: 600;
+}
+
+.elapsed-label {
+    color: #8e8e93;
+    font-weight: 500;
+}
+
+/* セッション情報 */
+.session-info {
+    background: linear-gradient(135deg, #ff9500, #ff6b35);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(255, 149, 0, 0.3);
+}
+
+.session-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.session-end-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-left: auto;
+    transition: all 0.2s ease;
+}
+
+.session-end-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.session-end-btn:active {
+    transform: scale(0.95);
+}
+
+.session-icon {
+    font-size: 16px;
+}
+
+.session-text {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.session-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.session-start {
+    font-weight: 500;
+}
+
+.session-start-time {
+    font-weight: 600;
+}
+
+.session-duration {
+    color: rgba(255, 255, 255, 0.8);
+    margin-left: auto;
+    font-weight: 500;
+}
+
+/* 情報グリッド */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+}
+
+.info-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    background: #f2f2f7;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-content {
+    flex: 1;
+}
+
+.info-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+.info-target {
+    font-size: 11px;
+    color: #007AFF;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.info-target.sufficient {
+    color: #27ae60;
+}
+
+.info-target.insufficient {
+    color: #e74c3c;
+}
+
+/* よく使う飲み物 */
+.popular-drinks {
+    margin-bottom: 24px;
+}
+
+.popular-drinks h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+}
+
+.popular-drinks-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.drink-quick-btn {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.drink-quick-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+.drink-quick-btn:active {
+    transform: scale(0.96);
+}
+
+.drink-quick-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(88, 86, 214, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.drink-quick-btn:hover::before {
+    opacity: 1;
+}
+
+.drink-quick-icon {
+    font-size: 32px;
+    margin-bottom: 4px;
+    transition: transform 0.3s ease;
+}
+
+.drink-quick-btn:hover .drink-quick-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.drink-quick-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.drink-quick-detail {
+    font-size: 11px;
+    color: #8e8e93;
+    text-align: center;
+}
+
+/* クイックアクション */
+.quick-actions {
+    margin-bottom: 24px;
+}
+
+.quick-actions h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+}
+
+.action-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.quick-action-btn {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.quick-action-btn:active {
+    transform: scale(0.98);
+}
+
+.action-icon {
+    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    background: #f2f2f7;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.water-action .action-icon {
+    background: linear-gradient(135deg, #007AFF, #5AC8FA);
+    color: white;
+}
+
+.toilet-action .action-icon {
+    background: linear-gradient(135deg, #FF9500, #FFCC02);
+    color: white;
+}
+
+.custom-water-action .action-icon {
+    background: linear-gradient(135deg, #5856D6, #AF52DE);
+    color: white;
+}
+
+.action-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.action-detail {
+    font-size: 10px;
+    color: #8e8e93;
+}
+
+/* 警告カード */
+.warning-card {
+    background: linear-gradient(135deg, #FF3B30, #FF9500);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 24px rgba(255, 59, 48, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.warning-icon {
+    font-size: 24px;
+}
+
+.warning-text {
+    font-weight: 500;
+}
+
+/* 飲み物タブ */
+.drinks-container {
+    padding-bottom: 20px;
+}
+
+.drinks-container h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+}
+
+.drink-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.drink-card {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.drink-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+.drink-card:active {
+    transform: scale(0.98);
+}
+
+.drink-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(88, 86, 214, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.drink-card:hover::before {
+    opacity: 1;
+}
+
+.drink-emoji {
+    font-size: 32px;
+    margin-bottom: 4px;
+    transition: transform 0.3s ease;
+}
+
+.drink-card:hover .drink-emoji {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.drink-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: center;
+}
+
+.drink-info {
+    font-size: 10px;
+    color: #8e8e93;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+/* 飲み物カードのアクション */
+.drink-actions {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.favorite-btn {
+    background: none;
+    border: 1px solid #E5E5EA;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.1);
+    border-color: #FFD700;
+}
+
+.favorite-btn.active {
+    background: #FFD700;
+    border-color: #FFD700;
+    color: white;
+}
+
+.add-drink-btn {
+    background: linear-gradient(135deg, #007AFF, #5856D6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.add-drink-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+}
+
+.add-drink-btn:active {
+    transform: translateY(0);
+}
+
+/* お気に入りなしの状態 */
+.no-favorites {
+    text-align: center;
+    padding: 20px;
+    color: #8e8e93;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    grid-column: 1 / -1;
+}
+
+.no-favorites p {
+    margin: 4px 0;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.no-favorites p:first-child {
+    font-weight: 600;
+    color: #1d1d1f;
+}
+
+.custom-drink {
+    border: 2px dashed #c7c7cc;
+    background: #f8f9fa;
+}
+
+.custom-drink:hover {
+    border-color: #007AFF;
+    background: white;
+}
+
+/* 履歴タブ */
+/* 前日データセクション */
+.previous-day-section {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #ff9500;
+}
+
+.previous-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.previous-day-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.toggle-btn {
+    background: #ff9500;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+    background: #e6850e;
+    transform: scale(1.05);
+}
+
+.toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.previous-day-content {
+    animation: slideDown 0.3s ease;
+}
+
+.previous-day-summary {
+    background: #fff8f0;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #ffe5cc;
+}
+
+.previous-day-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.previous-day-stat {
+    text-align: center;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e5ea;
+}
+
+.previous-day-stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ff9500;
+    margin-bottom: 4px;
+}
+
+.previous-day-stat-label {
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+.previous-day-memo {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #e5e5ea;
+    margin-top: 12px;
+}
+
+.previous-day-memo-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.previous-day-memo-content {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.previous-day-memo-empty {
+    color: #8e8e93;
+    font-style: italic;
+}
+
+.previous-day-timeline {
+    margin-top: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.previous-day-timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+}
+
+.previous-day-timeline-item:last-child {
+    border-bottom: none;
+}
+
+.previous-day-timeline-time {
+    font-weight: 600;
+    color: #ff9500;
+    min-width: 50px;
+}
+
+.previous-day-timeline-content {
+    flex: 1;
+    color: #333;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+        transform: translateY(0);
+    }
+}
+
+/* 一言メモセクション */
+.memo-section {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+}
+
+.memo-header {
+    margin-bottom: 16px;
+}
+
+.memo-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.memo-input-container {
+    position: relative;
+}
+
+#dailyMemo {
+    width: 100%;
+    min-height: 80px;
+    max-height: 120px;
+    padding: 12px 16px;
+    border: 2px solid #e5e5ea;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    color: #1a1a1a;
+    background: #f8f9fa;
+    resize: vertical;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#dailyMemo:focus {
+    border-color: #007AFF;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+#dailyMemo::placeholder {
+    color: #8e8e93;
+}
+
+.memo-char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #8e8e93;
+    margin-top: 8px;
+}
+
+.memo-char-count.warning {
+    color: #ff9500;
+}
+
+.memo-char-count.error {
+    color: #ff3b30;
+}
+
+.history-container {
+    padding-bottom: 20px;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.history-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.clear-btn {
+    background: #FF3B30;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+    background: #FF2D20;
+    transform: scale(1.05);
+}
+
+.clear-btn:active {
+    transform: scale(0.95);
+}
+
+/* 履歴アクション */
+.history-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.export-btn {
+    background: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.export-btn:hover {
+    background: #0056CC;
+    transform: scale(1.05);
+}
+
+.export-btn:active {
+    transform: scale(0.95);
+}
+
+/* エクスポートオプション */
+.export-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+}
+
+.export-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: white;
+    border: 2px solid #e5e5ea;
+    border-radius: 16px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.export-option-btn:hover {
+    border-color: #007AFF;
+    background: #f8f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15);
+}
+
+.export-option-icon {
+    font-size: 24px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.export-option-content {
+    flex: 1;
+}
+
+.export-option-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.export-option-desc {
+    font-size: 13px;
+    color: #8e8e93;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8e8e93;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-text {
+    font-size: 16px;
+}
+
+/* 履歴アイテム */
+.drink-item {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #007AFF;
+    animation: slideInRight 0.3s ease;
+}
+
+.item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.delete-item-btn {
+    background: #ff3b30;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.delete-item-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+}
+
+.delete-item-btn:active {
+    transform: scale(0.95);
+}
+
+.water-item {
+    border-left-color: #5AC8FA;
+}
+
+.toilet-item {
+    border-left-color: #FF9500;
+}
+
+.drink-info {
+    flex: 1;
+}
+
+.drink-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.drink-details {
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+.drink-alcohol {
+    font-size: 16px;
+    font-weight: 600;
+    color: #007AFF;
+}
+
+.water-item .drink-alcohol {
+    color: #5AC8FA;
+}
+
+.toilet-item .drink-alcohol {
+    color: #FF9500;
+}
+
+/* ボトムシート */
+.bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 0;
+    z-index: 2000;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    max-height: 70vh;
+    overflow: hidden;
+}
+
+.bottom-sheet.active {
+    transform: translateY(0);
+}
+
+.bottom-sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 16px 24px;
+    border-bottom: 1px solid #e5e5e7;
+    position: relative;
+}
+
+.bottom-sheet-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background: #c7c7cc;
+    border-radius: 2px;
+}
+
+.bottom-sheet-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    border: none;
+    background: #f2f2f7;
+    color: #8e8e93;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #e5e5ea;
+    color: #1a1a1a;
+}
+
+.bottom-sheet-content {
+    padding: 24px;
+    overflow-y: auto;
+    max-height: calc(70vh - 80px);
+}
+
+/* 入力グループ */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e5e5e7;
+    border-radius: 12px;
+    font-size: 16px;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #007AFF;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.input-group select {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e5e5e7;
+    border-radius: 12px;
+    font-size: 16px;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.input-group select:focus {
+    outline: none;
+    border-color: #007AFF;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.input-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.input-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    accent-color: #007AFF;
+}
+
+.input-group small {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+/* プライマリボタン */
+.primary-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #007AFF, #5856D6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3);
+}
+
+.primary-btn:active {
+    transform: scale(0.98);
+}
+
+.primary-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.primary-btn:hover::before {
+    left: 100%;
+}
+
+/* 記録忘れリマインダー */
+.reminder-card {
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 16px 0;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: fadeIn 0.3s ease, pulse 2s ease-in-out infinite;
+}
+
+.reminder-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.reminder-content {
+    flex: 1;
+}
+
+.reminder-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.reminder-text {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 12px;
+}
+
+.reminder-dismiss {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.reminder-dismiss:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+/* オーバーレイ */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1500;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(100px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* レスポンシブ */
+@media (max-width: 480px) {
+    .tab-nav {
+        margin: 0 12px 16px 12px;
+    }
+
+    .delete-item-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+
+    .tab-content {
+        padding: 0 12px;
+    }
+
+    .secondary-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .action-buttons-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .popular-drinks-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .drink-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .header-content {
+        padding: 8px 16px;
+    }
+
+    .app-title {
+        font-size: 16px;
+    }
+
+    .secondary-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .popular-drinks-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #000000;
+        color: #ffffff;
+    }
+
+    .app-header {
+        background: #1c1c1e;
+        border-bottom-color: #38383a;
+    }
+
+    .app-title {
+        color: #ffffff;
+    }
+
+    .app-version {
+        color: #8e8e93;
+        background: #2c2c2e;
+    }
+
+    .header-btn {
+        background: #2c2c2e;
+    }
+
+    .header-btn:hover {
+        background: #3a3a3c;
+    }
+
+    .tab-nav,
+    .stat-card,
+    .info-card,
+    .quick-action-btn,
+    .quick-favorite-btn,
+    .drink-card,
+    .drink-quick-btn,
+    .drink-item,
+    .bottom-sheet {
+        background: #1c1c1e;
+    }
+
+    .stat-card .stat-value,
+    .drink-name,
+    .drink-quick-name,
+    .quick-favorite-name,
+    .info-value {
+        color: #ffffff;
+    }
+
+    .delete-item-btn {
+        background: #ff453a;
+    }
+
+    .delete-item-btn:hover {
+        box-shadow: 0 2px 8px rgba(255, 69, 58, 0.4);
+    }
+
+    .input-group input {
+        background: #2c2c2e;
+        border-color: #3a3a3c;
+        color: #ffffff;
+    }
+
+    .action-icon {
+        background: #2c2c2e;
+    }
+
+    /* 前回飲酒情報のダークモード対応 */
+    .last-drink-info {
+        background: rgba(142, 142, 147, 0.2);
+    }
+
+    .last-drink-value {
+        color: #ffffff;
+    }
+
+    .elapsed-value {
+        color: #0a84ff;
+    }
+
+    .last-drink-label,
+    .elapsed-label {
+        color: #8e8e93;
+    }
+
+    /* 一言メモのダークモード対応 */
+    .memo-section {
+        background: #1c1c1e;
+    }
+
+    .memo-header h3 {
+        color: #ffffff;
+    }
+
+    #dailyMemo {
+        background: #2c2c2e;
+        border-color: #3a3a3c;
+        color: #ffffff;
+    }
+
+    #dailyMemo:focus {
+        border-color: #0a84ff;
+        background: #1c1c1e;
+    }
+
+    #dailyMemo::placeholder {
+        color: #8e8e93;
+    }
+
+    .memo-char-count {
+        color: #8e8e93;
+    }
+
+    /* エクスポート機能のダークモード対応 */
+    .export-btn {
+        background: #0a84ff;
+    }
+
+    .export-btn:hover {
+        background: #0056CC;
+    }
+
+    .export-option-btn {
+        background: #1c1c1e;
+        border-color: #3a3a3c;
+    }
+
+    .export-option-btn:hover {
+        border-color: #0a84ff;
+        background: #2c2c2e;
+    }
+
+    .export-option-title {
+        color: #ffffff;
+    }
+
+    .export-option-desc {
+        color: #8e8e93;
+    }
+
+    /* 前日データのダークモード対応 */
+    .previous-day-section {
+        background: #1c1c1e;
+        border-left-color: #ff9500;
+    }
+
+    .previous-day-header h3 {
+        color: #ffffff;
+    }
+
+    .toggle-btn {
+        background: #ff9500;
+    }
+
+    .toggle-btn:hover {
+        background: #e6850e;
+    }
+
+    .previous-day-summary {
+        background: #2c2c2e;
+        border-color: #3a3a3c;
+    }
+
+    .previous-day-stat {
+        background: #1c1c1e;
+        border-color: #3a3a3c;
+    }
+
+    .previous-day-stat-value {
+        color: #ff9500;
+    }
+
+    .previous-day-stat-label {
+        color: #8e8e93;
+    }
+
+    .previous-day-memo {
+        background: #1c1c1e;
+        border-color: #3a3a3c;
+    }
+
+    .previous-day-memo-title {
+        color: #ffffff;
+    }
+
+    .previous-day-memo-content {
+        color: #ffffff;
+    }
+
+    .previous-day-memo-empty {
+        color: #8e8e93;
+    }
+
+    .previous-day-timeline-item {
+        border-bottom-color: #3a3a3c;
+    }
+
+    .previous-day-timeline-time {
+        color: #ff9500;
+    }
+
+    .previous-day-timeline-content {
+        color: #ffffff;
+    }
+}
+
+/* PWA最適化 */
+@media (display-mode: standalone) {
+    .app-header {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    .app-main {
+        padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+    }
+}
+
+/* タッチ操作最適化 */
+@media (hover: none) and (pointer: coarse) {
+    .tab-btn:hover,
+    .stat-card:hover,
+    .info-card:hover,
+    .quick-action-btn:hover,
+    .drink-card:hover,
+    .drink-quick-btn:hover,
+    .delete-item-btn:hover {
+        transform: none;
+    }
+
+    .tab-btn:active,
+    .quick-action-btn:active,
+    .drink-card:active,
+    .drink-quick-btn:active {
+        transform: scale(0.96);
+    }
+
+    .delete-item-btn:active {
+        transform: scale(0.90);
+    }
+}

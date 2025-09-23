@@ -1,0 +1,32 @@
+{
+  "name": "drink-smart",
+  "version": "1.9.0",
+  "description": "Drink Smart - Progressive Web App for Responsible Drinking",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step needed for static site'",
+    "ios": "npx cap open ios",
+    "android": "npx cap open android",
+    "sync": "npx cap sync",
+    "copy": "npx cap copy",
+    "update": "npx cap update"
+  },
+  "keywords": [
+    "alcohol",
+    "health",
+    "bac",
+    "drinking",
+    "pwa"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/haptics": "^6.0.0",
+    "@capacitor/local-notifications": "^6.0.0"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "appId": "com.yoshikawa.drinksmart",
+  "appName": "Drink Smart",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#667eea",
+      "showSpinner": false
+    },
+    "Haptics": {
+      "enabled": true
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#488AFF"
+    }
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
